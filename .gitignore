@@ -1,6 +1,6 @@
 # Ignore the Data directory
-Data/
+*/Results/
 
 # Ignore R related files
-.Rhistory
-.Rdata
+*.Rhistory
+*.Rdata
