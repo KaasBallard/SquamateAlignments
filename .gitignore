@@ -1,6 +1,9 @@
 # Ignore the Data directories
-SoftMasking/Naja_nigricollis/Results/
+SoftMasking/*/Results/
 Reference_Genomes/
+
+# Ignore any of the RepeatModeler runs
+SoftMasking/*/Code/bash/RM_*/
 
 # Ignore R related files
 *.Rhistory

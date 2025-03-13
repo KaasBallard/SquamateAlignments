@@ -8,10 +8,22 @@ The program can be found here:
 https://github.com/darencard/GenomeAnnotation/blob/master/repclassifier
 
 The blog that explains the program can be found here:
-
+https://darencard.net/blog/2022-07-09-genome-repeat-annotation/
 ScriptDescription
 
-../../../InstallationFiles/repclassifier -t 3 -d Tetrapoda -u ../00_InitialRepeatModellerRun/croAtr2-families.prefix.fa.unknown -k ../00_InitialRepeatModellerRun/croAtr2-families.prefix.fa.known -a ../00_InitialRepeatModellerRun/croAtr2-families.prefix.fa.known -o round-01_RepbaseTetrapoda-Self
+# Activate the mamba environment before doing anything else
+source /home/administrator/mambaforge/bin/activate RepeatMaskAnnot
+
+# Set the number of threads for repclassifier
+threads=40
+
+# Step #1: Run repclassifier with the Repbase database
+repclassifier -t "$threads" \
+	-d Tetrapoda \
+	-u ../00_InitialRepeatModellerRun/croAtr2-families.prefix.fa.unknown \
+	-k ../00_InitialRepeatModellerRun/croAtr2-families.prefix.fa.known \
+	-a ../00_InitialRepeatModellerRun/croAtr2-families.prefix.fa.known \
+	-o round-01_RepbaseTetrapoda-Self
 
 ../../../InstallationFiles/repclassifier -t 3 -u round-01_RepbaseTetrapoda-Self/round-01_RepbaseTetrapoda-Self.unknown -k round-01_RepbaseTetrapoda-Self/round-01_RepbaseTetrapoda-Self.known -a round-01_RepbaseTetrapoda-Self/round-01_RepbaseTetrapoda-Self.known -o round-02_Self
 

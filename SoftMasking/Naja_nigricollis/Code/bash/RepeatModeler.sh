@@ -12,7 +12,7 @@ ScriptDescription
 source /home/administrator/mambaforge/bin/activate RepeatMaskAnnot
 
 # Set the number of threads for RepeatModeler
-threads=24
+threads=40
 
 # Set the output directory
 output_directory="/home/administrator/ExtraSSD2/Kaas/Projects/SquamateAlignments/SoftMasking/Naja_nigricollis/Results/0_RepeatModeller"
@@ -33,7 +33,7 @@ if [ ! -f "$output_directory/$database_name.nsq" ]; then
 	BuildDatabase -name "$output_directory/$database_name" \
 		-engine rmblast \
 		"$reference_genome" 2>&1 | tee "$output_directory/Logs/BuildDatabase.log"
-else
+elsne
 	echo "Database already exists at the specified path. Skipping."
 fi
 
