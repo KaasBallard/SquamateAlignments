@@ -17,6 +17,10 @@ output_directory="/home/administrator/ExtraSSD2/Kaas/Projects/SquamateAlignments
 # Create log directory under the output directory if it does not exist
 [ ! -d "$output_directory/Logs" ] && mkdir -p "$output_directory/Logs"
 
+# Set the name for the RepeatModeler database
+database_name="Naja_nigricollis"
+
 # Build a new RepeatModeler database for the reference genome
-BuildDatabase -name \
-	-engine 
+BuildDatabase -name "$database_name" \
+	-engine rmblast \
+	

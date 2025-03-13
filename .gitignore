@@ -1,5 +1,6 @@
-# Ignore the Data directory
+# Ignore the Data directories
 */Results/
+Reference_Genomes/
 
 # Ignore R related files
 *.Rhistory
