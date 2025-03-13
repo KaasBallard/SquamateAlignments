@@ -1,5 +1,5 @@
 # Ignore the Data directories
-*/Results/
+SoftMasking/Naja_nigricollis/Results/
 Reference_Genomes/
 
 # Ignore R related files
