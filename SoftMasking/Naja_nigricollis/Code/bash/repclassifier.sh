@@ -11,11 +11,48 @@ The blog that explains the program can be found here:
 https://darencard.net/blog/2022-07-09-genome-repeat-annotation/
 ScriptDescription
 
+# Set the number of threads for repclassifier
+threads=40
+
 # Activate the mamba environment before doing anything else
 source /home/administrator/mambaforge/bin/activate RepeatMaskAnnot
 
-# Set the number of threads for repclassifier
-threads=40
+# Set the RepeatModeler directory
+repeat_modeler_dir="/home/administrator/ExtraSSD2/Kaas/Projects/SquamateAlignments/SoftMasking/Naja_nigricollis/Results/0_RepeatModeller"
+
+# Set the RepeatModeler families file
+repeat_modeler_families=$(find "$repeat_modeler_dir" -name "*-families.fa" -print -quit)
+
+# Ensure the file was found
+if [[ -z "$repeat_modeler_families" ]]; then
+    echo "Error: No '*-families.fa' file found in $repeat_modeler_dir"
+    exit 1
+fi
+
+# Set the prefix for headers in the RepeatModeler families file
+species_prefix="najNig1_"
+
+# Set the name of the new file with prefixes added
+repeat_modeler_families_prefix=$(basename "$repeat_modeler_families" .fa).prefix.fa
+
+# Step #1: Prepare the RepeatModeler families file for repclassifier by altering the file slightly
+cat "$repeat_modeler_families" | seqkit fx2tab | \
+	awk -v prefix="$species_prefix" '{ if ($1 ~ /^>/) print prefix $0; else print $0 }' | \
+	seqkit tab2fx > "$repeat_modeler_families_prefix"
+
+# Set the file name for unknown elements
+unknown_elements_file="$repeat_modeler_families_prefix.unknown"
+
+# Set the file name for known elements
+known_elements_file="$repeat_modeler_families_prefix.known"
+
+# Step #2: Split elements into known and unknown classification files
+# Find the known elements
+cat "$repeat_modeler_families_prefix" | seqkit fx2tab | \
+	grep -v "Unknown" | seqkit tab2fx > "$known_elements_file"
+# Find the unkown elements
+cat "$repeat_modeler_families_prefix" | seqkit fx2tab | \
+	grep "Unknown" | seqkit tab2fx > "$unknown_elements_file"
 
 # Step #1: Run repclassifier with the Repbase database
 repclassifier -t "$threads" \
