@@ -1,6 +1,7 @@
 # Ignore the Data directories
 SoftMasking/*/Results/
 Reference_Genomes/
+SoftMasking/known_repeat_elements/
 
 # Ignore any of the RepeatModeler runs
 SoftMasking/*/Code/bash/RM_*/
