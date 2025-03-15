@@ -15,6 +15,9 @@ if [ $? != 0 ]; then
 
   # Create a new window named 'htop'
   tmux new-window -d -n htop
+
+  # Create a new window named 'git' for running git commands
+  tmux new-window -d -n git
 fi
 
 # Attach to the session
