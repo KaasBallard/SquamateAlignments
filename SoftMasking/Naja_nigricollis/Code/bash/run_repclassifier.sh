@@ -91,7 +91,7 @@ if [[ ! -f "$unknown_elements_file" ]]; then
 	echo "Error: Unknown elements file not created: $unknown_elements_file"
 	exit 1
 fi
-fakfjaf
+
 # Step #3-12: Iterative repclassifier rounds
 # Define the number of rounds to run the loop for
 num_rounds=10
