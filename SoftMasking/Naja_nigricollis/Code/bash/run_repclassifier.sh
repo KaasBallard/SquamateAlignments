@@ -31,8 +31,16 @@ echo "Log file created at: $log_file"
 threads=40
 
 # Activate the mamba environment before doing anything else
-echo "Activating mamba environment RepeatMaskAnnot"
+echo "Activating mamba environment: RepeatMaskAnnot"
 source /home/administrator/mambaforge/bin/activate RepeatMaskAnnot
+
+# Check if the mamba environment is active
+if [[ -z "$CONDA_DEFAULT_ENV" ]]; then
+	echo "No mamba environment is active. Exiting."
+	exit 1
+else
+	echo "Mamba environment active: $CONDA_DEFAULT_ENV"
+fi
 
 # Define the path to repclassifier
 repclassifier_cmd="/home/administrator/ExtraSSD2/Sid/Crotalus_atrox_genomics/9_NewRepeatAnnotationAndMasking/InstallationFiles/repclassifier"
@@ -91,6 +99,12 @@ num_rounds=10
 custom_snake_repeats="/home/administrator/ExtraSSD2/Kaas/Projects/SquamateAlignments/SoftMasking/known_repeat_elements/18Snakes.Known.clust.fasta"
 echo "Custom snake repeats file: $custom_snake_repeats"
 
+# Move to the repclassifier output directory
+cd "$repclassifier_dir" || return
+
+# Print the working directory to make sure I am in the the right one
+echo "Current working directory: $(pwd)"
+
 # Loop for all rounds (1-10)
 for ((round=1; round <= num_rounds; round++)); do
 	echo "-------------------------------------------------------"
@@ -101,7 +115,7 @@ for ((round=1; round <= num_rounds; round++)); do
 		# Set the previous round directory
 		prev_round_dir="$repeat_modeler_dir"
 		# Set the current round output directory
-		current_round_dir="$repclassifier_dir/round-01_RepbaseTetrapoda_Self"
+		current_round_dir="round-01_RepbaseTetrapoda_Self"
 		# Set the unknown elements file for this round
 		unknown_file="$unknown_elements_file"
 		# Set the known elements file for this round
@@ -127,20 +141,20 @@ for ((round=1; round <= num_rounds; round++)); do
 	elif ((2<=round<=5)); then
 		# Special case for round 2, which uses output from round 1 with its special name
 		if ((round==2)); then
-			prev_round_dir="$repclassifier_dir/round-01_RepbaseTetrapoda_Self"
+			prev_round_dir="round-01_RepbaseTetrapoda_Self"
 			unknown_file="$prev_round_dir/round-01_RepbaseTetrapoda_Self.unknown"
 			known_file="$prev_round_dir/round-01_RepbaseTetrapoda_Self.known"
 				echo "Round 2: Using output from round 1 (special case)"
 		else
 			# For rounds 3-5, use the standard naming pattern
-			prev_round_dir="$repclassifier_dir/round-$(printf "%02d" $((round-1)))_Self"
+			prev_round_dir="round-$(printf "%02d" $((round-1)))_Self"
 			unknown_file="$prev_round_dir/round-$(printf "%02d" $((round-1)))_Self.unknown"
 			known_file="$prev_round_dir/round-$(printf "%02d" $((round-1)))_Self.known"
 				echo "Round $round: Using standard naming pattern"
 		fi
 
 		# Set the current round output directory (same format for rounds 2-5)
-		current_round_dir="$repclassifier_dir/round-$(printf "%02d" "$round")_Self"
+		current_round_dir="round-$(printf "%02d" "$round")_Self"
 			
 			echo "Previous round directory: $prev_round_dir"
 			echo "Current round directory: $current_round_dir"
@@ -158,9 +172,9 @@ for ((round=1; round <= num_rounds; round++)); do
 	# If the round is 6, use repclassifier with the snake repeat elements file that Todd made long ago
 	elif ((round == 6)); then
 		# Set the previous round directory
-		prev_round_dir="$repclassifier_dir/round-$(printf "%02d" $((round-1)))_Self"
+		prev_round_dir="round-$(printf "%02d" $((round-1)))_Self"
 		# Set the current round directory
-		current_round_dir="$repclassifier_dir/round-06_18Snakes"
+		current_round_dir="round-06_18Snakes"
 		# Set the unknown elements file
 		unknown_file="$prev_round_dir/round-$(printf "%02d" $((round-1)))_Self.unknown"
 		# Set the file for the known elements
@@ -187,7 +201,7 @@ for ((round=1; round <= num_rounds; round++)); do
 		# Special case for round 7, as that round used the custom snake fasta library, and has a different name
 		if ((round==7)); then
 			# Set the previous round to round 6
-			prev_round_dir="$repclassifier_dir/round-06_18Snakes"
+			prev_round_dir="round-06_18Snakes"
 			# Set the unknown file to the round 6 unknown elements
 			unknown_file="$prev_round_dir/round-06_18Snakes.unknown"
 			# Set the known file to the round 6 known elements
@@ -195,14 +209,14 @@ for ((round=1; round <= num_rounds; round++)); do
 				echo "Round 7: Using output from round 6 (special case)"
 		else
 			# For rounds 8 and up
-			prev_round_dir="$repclassifier_dir/round-$(printf "%02d" $((round-1)))_Self"
+			prev_round_dir="round-$(printf "%02d" $((round-1)))_Self"
 			unknown_file="$prev_round_dir/round-$(printf "%02d" $((round-1)))_Self.unknown"
 			known_file="$prev_round_dir/round-$(printf "%02d" $((round-1)))_Self.known"
 				echo "Round $round: Using standard naming pattern"
 		fi
 
 		# Set the current round output directory (same format for rounds 8+)
-		current_round_dir="$repclassifier_dir/round-$(printf "%02d" "$round")_Self"
+		current_round_dir="round-$(printf "%02d" "$round")_Self"
 
 			echo "Previous round directory: $prev_round_dir"
 			echo "Current round directory: $current_round_dir"
