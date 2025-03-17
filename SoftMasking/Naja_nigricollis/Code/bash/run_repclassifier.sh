@@ -1,4 +1,4 @@
-
+#!/bin/bash
 : <<'ScriptDescription'
 Date: 2025/03/11
 This script is designed to repclassifier, which is a piece of softwart that uses Repbase database and RepeatMasker to try and identify unknown elements with sequence similarity to curated repeat elements in Repbase.
