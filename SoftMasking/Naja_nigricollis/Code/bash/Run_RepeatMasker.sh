@@ -14,6 +14,9 @@ ScriptDescription
 # Reference genome
 reference_genome="$HOME/ExtraSSD2/Kaas/Projects/SquamateAlignments/Reference_Genomes/from_Sekar/_completeAssemblies/Naja_nigricollis_najNig1/Assembly/najNig2.ragtag.scaffold_naNa.REHEADER.MT.fasta"
 
+# Genome basename
+species_name=$(basename "$reference_genome" .fasta)
+
 # Set the RepeatMasker directory
 repeat_masker_dir="$HOME/ExtraSSD2/Kaas/Projects/SquamateAlignments/SoftMasking/Naja_nigricollis/Results/2_RepeatMasker"
 
@@ -62,6 +65,32 @@ done
 # Set the number of threads for RepeatMasker -pa to use
 t=40
 
+# TODO: You need to check if this actually works
+# Create a function to rename masked files to something more useful
+rename_masked_file() {
+    local directory="$1"   # Directory where the file is located
+    local new_suffix="$2"  # New suffix to replace ".masked.fasta"
+
+    # Find the masked genome file
+    local masked_file
+    masked_file=$(find "$directory" -type f -name "*.masked.fasta" | head -n 1)
+
+    # Check if a file was found
+    if [[ -z "$masked_file" ]]; then
+        echo "Error: No masked genome file found in $directory"
+        exit 1
+    fi
+
+    # Construct the new filename
+    local new_masked_file="${masked_file/.masked.fasta/.$new_suffix.fasta}"
+
+    # Rename the file
+    mv "$masked_file" "$new_masked_file"
+
+    # Return the new filename (optional)
+    echo "$new_masked_file"
+}
+
 # Round 1: SSR masking
 # Run simple sequence repeat (SSR) masking
 # Note that Daren likes to do this first as it sames time to mask all of the simple repeats, 
@@ -99,33 +128,59 @@ RepeatMasker \
 	"$round1_genome" \
 	-nolow 2>&1 | tee "Logs/$round2.log"
 
-# Rename some of the files to make it more clear what they are
-rename 's/simple_mask.masked.fasta/bovb_mask/g' "$round2"/*
-rename 's/.masked$/.masked.fasta/g' "$round2"/*
+# Rename the files to something more useful
+round2_genome=$(rename_masked_file "$round2" "BovB_masked")
 
-# run RepBase Tetrapoda masking based on repease 20181026
+# Round 3: RepBase Tetrapoda masking based on repease 20181026
+# Run RepBase Tetrapoda masking based on repease 20181026
 echo -e "\e[31mRunning step 3: RepBase Tetrapoda masking\e[0m"
-RepeatMasker -pa 8 -engine ncbi -species tetrapoda -a -dir 03_repbase_tetrapoda_mask 02_squamate_bovb_cr1/croAtr2.ragtag.scaffold_cVir.cAda.REHEADER.MT.bovb_mask.masked.fasta -nolow 2>&1 | tee logs/03_repbase_tetrapoda_mask.log
+RepeatMasker \
+	-pa "$t" \
+	-engine ncbi \
+	-species tetrapoda \
+	-a \
+	-dir "$round3" \
+	"$round2_genome" \
+	-nolow 2>&1 | tee "Logs/$round3.log"
 
-rename 's/bovb_mask.masked.fasta/tetrapoda_mask/g' 03_repbase_tetrapoda_mask/*
-rename 's/masked$/masked.fasta/g' 03_repbase_tetrapoda_mask/*
+# Rename the file to something more useful
+round3_genome=$(rename_masked_file "$round3" "Tetrapoda_masked")
 
-# run "19snake" known masking
+
+# Round 4: "19snake" known masking
+# Run "19snake" known masking
+# Note that this comes from the Repclassifier output
+# TODO: This is incomplete, but I need the complete repclassifier out for it
 echo -e "\e[31mRunning step 4: 18 snake (Schield 2022) + croAtr2 known repeats\e[0m"
-RepeatMasker -pa 8 -engine ncbi -lib ./z_repeat_libraries/19Snakes.Known.clust.fasta -a -dir 04_19snake_known_mask 03_repbase_tetrapoda_mask/croAtr2.ragtag.scaffold_cVir.cAda.REHEADER.MT.tetrapoda_mask.masked.fasta -nolow 2>&1 | tee logs/04_19snake_known_mask.log
+RepeatMasker -pa "$t" \
+	-engine ncbi \
+	-lib ./z_repeat_libraries/19Snakes.Known.clust.fasta \
+	-a \
+	-dir 04_19snake_known_mask \
+	"$round3_genome" \
+	-nolow 2>&1 | tee "Logs/$round5.log"
 
-rename 's/tetrapoda_mask.masked.fasta/snake_known_mask/g' 04_19snake_known_mask/*
-rename 's/masked$/masked.fasta/g' 04_19snake_known_mask/*
+# Rename the file to something more useful
+round4_genome=$(rename_masked_file "$round4" "04_19Snake_Known_Mask")
 
+# Round 5: 05_19 Snake unknown masking
 # run "19snake" unknown masking
 echo -e "\e[31mRunning step 5: 18 snake (Schield 2022) + croAtr2 unknown repeats\e[0m"
-RepeatMasker -pa 8 -engine ncbi -lib ./z_repeat_libraries/19Snakes.Unknown.clust.fasta -a -dir 05_19snake_unknown_mask 04_19snake_known_mask/croAtr2.ragtag.scaffold_cVir.cAda.REHEADER.MT.snake_known_mask.masked.fasta -nolow 2>&1 | tee logs/05_19snake_unknown_mask.log
+RepeatMasker \
+	-pa "$t" \
+	-engine ncbi \
+	-lib ./z_repeat_libraries/19Snakes.Unknown.clust.fasta \
+	-a \
+	-dir "$round5" \
+	"$round4_genome" \
+	-nolow 2>&1 | tee "Logs/$round5.log"
 
-rename 's/snake_known_mask.masked.fasta/snake_unknown_mask/g' 05_19snake_unknown_mask/*
-rename 's/masked$/masked.fasta/g' 05_19snake_unknown_mask/*
+# Rename the file to something more useful
+round5_genome=$(rename_masked_file "$round5" "04_19Snake_Known_Mask")
 
-# summarize/combine full output
-cp 05_19snake_unknown_mask/croAtr2.ragtag.scaffold_cVir.cAda.REHEADER.MT.snake_unknown_mask.masked.fasta 06_full_mask/croAtr2.ragtag.scaffold_cVir.cAda.REHEADER.MT.complex_hard-mask.masked.fasta
+
+# Summarize/combine full output
+cp "$round5_genome" "$round6/$species_name.complex_hard-mask.masked.fasta"
 
 
 # .out
@@ -183,6 +238,8 @@ echo -e "\e[31mSoft masking the reference genome...\e[0m"
 # Add to this the regions that were soft-masked in step 1
 # Combine these sets of coordinates to get all masked regions and soft mask them
 
+# TODO: Fix this to make it faster
+# FIXME: This is slow as shit
 ### seqkit takes extremely long and should be optimized
 
 seqkit locate --bed -rPp "N+" /home/administrator/ExtraSSD2/Sid/Crotalus_atrox_genomics/z_Final_Annotation_Genome_Oct2024/croAtr2.ragtag.scaffold_cVir.cAda.REHEADER.MT.fasta > original_N_coords.bed

@@ -106,7 +106,7 @@ cd "$repclassifier_dir" || return
 echo "Current working directory: $(pwd)"
 
 # Loop for all rounds (1-10)
-for ((round=1; round <= num_rounds; round++)); do
+for ((round=1; round<=num_rounds; round++)); do
 	echo "-------------------------------------------------------"
 	echo "Starting round $round at $(date)"
 
@@ -138,7 +138,7 @@ for ((round=1; round <= num_rounds; round++)); do
 			-o "$current_round_dir"
 	
 	# If the round is between 2 and 5, use repclassifier with these settings
-	elif ((2<=round<=5)); then
+	elif ((2<=round && round<=5)); then
 		# Special case for round 2, which uses output from round 1 with its special name
 		if ((round==2)); then
 			prev_round_dir="round-01_RepbaseTetrapoda_Self"
@@ -170,7 +170,7 @@ for ((round=1; round <= num_rounds; round++)); do
 			-o "$current_round_dir"
 
 	# If the round is 6, use repclassifier with the snake repeat elements file that Todd made long ago
-	elif ((round == 6)); then
+	elif ((round==6)); then
 		# Set the previous round directory
 		prev_round_dir="round-$(printf "%02d" $((round-1)))_Self"
 		# Set the current round directory
