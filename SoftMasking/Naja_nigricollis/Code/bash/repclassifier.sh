@@ -1,4 +1,3 @@
-#!/bin/bash
 
 : <<'ScriptDescription'
 Date: 2025/03/11
@@ -35,6 +34,9 @@ threads=40
 echo "Activating mamba environment RepeatMaskAnnot"
 source /home/administrator/mambaforge/bin/activate RepeatMaskAnnot
 
+# Define the path to repclassifier
+repclassifier_cmd="/home/administrator/ExtraSSD2/Sid/Crotalus_atrox_genomics/9_NewRepeatAnnotationAndMasking/InstallationFiles/repclassifier"
+
 # Set the RepeatModeler families file
 repeat_modeler_families=$(find "$repeat_modeler_dir" -name "*-families.fa" -print -quit)
 echo "RepeatModeler families file: $repeat_modeler_families"
@@ -52,7 +54,6 @@ species_prefix="najNig1_"
 repeat_modeler_families_prefix=$(basename "$repeat_modeler_families" .fa).prefix.fa
 
 # Step #1: Prepare the RepeatModeler families file for repclassifier by altering the file slightly
-echo "Step #1: Preparing RepeatModeler families file with prefix '$species_prefix'"
 cat "$repeat_modeler_families" | seqkit fx2tab | \
 	awk -v prefix="$species_prefix" '{ if ($1 ~ /^>/) print prefix $0; else print $0 }' | \
 	seqkit tab2fx > "$repeat_modeler_dir/$repeat_modeler_families_prefix"
@@ -64,28 +65,24 @@ unknown_elements_file="$repeat_modeler_dir/$repeat_modeler_families_prefix.unkno
 known_elements_file="$repeat_modeler_dir/$repeat_modeler_families_prefix.known"
 
 # Step #2: Split elements into known and unknown classification files
-echo "Step #2: Splitting elements into known and unknown classification files"
 # Find the known elements
 cat "$repeat_modeler_dir/$repeat_modeler_families_prefix" | seqkit fx2tab | \
 	grep -v "Unknown" | seqkit tab2fx > "$known_elements_file"
-# Find the unknown elements
+# Find the unkown elements
 cat "$repeat_modeler_dir/$repeat_modeler_families_prefix" | seqkit fx2tab | \
 	grep "Unknown" | seqkit tab2fx > "$unknown_elements_file"
 
 # Make sure both files were created
 # Ensure the known file was found - CORRECTED ERROR MESSAGE
 if [[ ! -f "$known_elements_file" ]]; then
-    echo "Error: Known elements file not created: $known_elements_file"
-    exit 1
+	echo "Error: Known elements file not created: $known_elements_file"
+	exit 1
 fi
 # Ensure the unknown file was found - CORRECTED ERROR MESSAGE
 if [[ ! -f "$unknown_elements_file" ]]; then
-    echo "Error: Unknown elements file not created: $unknown_elements_file"
-    exit 1
+	echo "Error: Unknown elements file not created: $unknown_elements_file"
+	exit 1
 fi
-
-echo "Known elements file size: $(stat -c %s "$known_elements_file") bytes"
-echo "Unknown elements file size: $(stat -c %s "$unknown_elements_file") bytes"
 
 # Step #3-12: Iterative repclassifier rounds
 # Define the number of rounds to run the loop for
@@ -97,7 +94,7 @@ echo "Custom snake repeats file: $custom_snake_repeats"
 # Loop for all rounds (1-10)
 for ((round=1; round <= num_rounds; round++)); do
 	echo "-------------------------------------------------------"
-    echo "Starting round $round at $(date)"
+	echo "Starting round $round at $(date)"
 
 	# If round 1, use the repclassifier with these settings
 	if ((round==1)); then
@@ -110,15 +107,15 @@ for ((round=1; round <= num_rounds; round++)); do
 		# Set the known elements file for this round
 		known_file="$known_elements_file"
 
-		echo "Round 1: Using Repbase Tetrapoda database"
-		echo "Previous round directory: $prev_round_dir"
-		echo "Current round directory: $current_round_dir"
-		echo "Unknown file: $unknown_file"
-		echo "Known file: $known_file"
+			echo "Round 1: Using Repbase Tetrapoda database"
+			echo "Previous round directory: $prev_round_dir"
+			echo "Current round directory: $current_round_dir"
+			echo "Unknown file: $unknown_file"
+			echo "Known file: $known_file"
 
 		# Run repclassifier
 		echo "Running repclassifier for round 1..."
-		repclassifier \
+		"$repclassifier_cmd" \
 			-t "$threads" \
 			-d Tetrapoda \
 			-u "$unknown_file" \
@@ -133,26 +130,25 @@ for ((round=1; round <= num_rounds; round++)); do
 			prev_round_dir="$repclassifier_dir/round-01_RepbaseTetrapoda_Self"
 			unknown_file="$prev_round_dir/round-01_RepbaseTetrapoda_Self.unknown"
 			known_file="$prev_round_dir/round-01_RepbaseTetrapoda_Self.known"
-			echo "Round 2: Using output from round 1 (special case)"
+				echo "Round 2: Using output from round 1 (special case)"
 		else
 			# For rounds 3-5, use the standard naming pattern
 			prev_round_dir="$repclassifier_dir/round-$(printf "%02d" $((round-1)))_Self"
 			unknown_file="$prev_round_dir/round-$(printf "%02d" $((round-1)))_Self.unknown"
 			known_file="$prev_round_dir/round-$(printf "%02d" $((round-1)))_Self.known"
-			echo "Round $round: Using standard naming pattern"
+				echo "Round $round: Using standard naming pattern"
 		fi
 
 		# Set the current round output directory (same format for rounds 2-5)
 		current_round_dir="$repclassifier_dir/round-$(printf "%02d" "$round")_Self"
 			
-		echo "Previous round directory: $prev_round_dir"
-		echo "Current round directory: $current_round_dir"
-		echo "Unknown file: $unknown_file"
-		echo "Known file: $known_file"
+			echo "Previous round directory: $prev_round_dir"
+			echo "Current round directory: $current_round_dir"
+			echo "Unknown file: $unknown_file"
+			echo "Known file: $known_file"
 
 		# Run repclassifier
-		echo "Running repclassifier for round $round..."
-		repclassifier \
+		"$repclassifier_cmd" \
 			-t "$threads" \
 			-u "$unknown_file" \
 			-k "$known_file" \
@@ -170,16 +166,16 @@ for ((round=1; round <= num_rounds; round++)); do
 		# Set the file for the known elements
 		known_file="$prev_round_dir/round-$(printf "%02d" $((round-1)))_Self.known"
 
-		echo "Round 6: Using custom snake repeats library"
-		echo "Previous round directory: $prev_round_dir"
-		echo "Current round directory: $current_round_dir"
-		echo "Unknown file: $unknown_file"
-		echo "Known file: $known_file"
-		echo "Custom snake repeats: $custom_snake_repeats"
+			echo "Round 6: Using custom snake repeats library"
+			echo "Previous round directory: $prev_round_dir"
+			echo "Current round directory: $current_round_dir"
+			echo "Unknown file: $unknown_file"
+			echo "Known file: $known_file"
+			echo "Custom snake repeats: $custom_snake_repeats"
 
 		# Run repclassifier
 		echo "Running repclassifier for round 6..."
-		repclassifier \
+		"$repclassifier_cmd" \
 			-t "$threads" \
 			-u "$unknown_file" \
 			-k "$custom_snake_repeats" \
@@ -187,7 +183,7 @@ for ((round=1; round <= num_rounds; round++)); do
 			-o "$current_round_dir"
 
 	# All other rounds
-    else
+	else
 		# Special case for round 7, as that round used the custom snake fasta library, and has a different name
 		if ((round==7)); then
 			# Set the previous round to round 6
@@ -196,32 +192,32 @@ for ((round=1; round <= num_rounds; round++)); do
 			unknown_file="$prev_round_dir/round-06_18Snakes.unknown"
 			# Set the known file to the round 6 known elements
 			known_file="$prev_round_dir/round-06_18Snakes.known"
-			echo "Round 7: Using output from round 6 (special case)"
+				echo "Round 7: Using output from round 6 (special case)"
 		else
 			# For rounds 8 and up
 			prev_round_dir="$repclassifier_dir/round-$(printf "%02d" $((round-1)))_Self"
 			unknown_file="$prev_round_dir/round-$(printf "%02d" $((round-1)))_Self.unknown"
 			known_file="$prev_round_dir/round-$(printf "%02d" $((round-1)))_Self.known"
-			echo "Round $round: Using standard naming pattern"
+				echo "Round $round: Using standard naming pattern"
 		fi
 
 		# Set the current round output directory (same format for rounds 8+)
 		current_round_dir="$repclassifier_dir/round-$(printf "%02d" "$round")_Self"
 
-		echo "Previous round directory: $prev_round_dir"
-		echo "Current round directory: $current_round_dir"
-		echo "Unknown file: $unknown_file"
-		echo "Known file: $known_file"
+			echo "Previous round directory: $prev_round_dir"
+			echo "Current round directory: $current_round_dir"
+			echo "Unknown file: $unknown_file"
+			echo "Known file: $known_file"
 
 		# Run repclassifier
 		echo "Running repclassifier for round $round..."
-		repclassifier \
+		"$repclassifier_cmd" \
 			-t "$threads" \
 			-u "$unknown_file" \
 			-k "$known_file" \
 			-a "$known_file" \
 			-o "$current_round_dir"
-    fi
+	fi
 
 	echo "Completed round $round at $(date)"
 
@@ -235,4 +231,3 @@ for ((round=1; round <= num_rounds; round++)); do
 done
 
 echo "All repclassifier rounds completed successfully at $(date)"
-echo "Log file location: $log_file"
