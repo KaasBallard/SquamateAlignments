@@ -1,4 +1,5 @@
 #!/bin/bash
+# TODO: Figure out how Sid typed all of this shit out and somehow not fuck up
 : <<'ScriptDescription'
 Date: 2025/03/17
 This script is designed to run RepeatMasker, and is based off of Sid's script and Daren's blog post.
@@ -14,6 +15,12 @@ ScriptDescription
 # Reference genome
 reference_genome="$HOME/ExtraSSD2/Kaas/Projects/SquamateAlignments/Reference_Genomes/from_Sekar/_completeAssemblies/Naja_nigricollis_najNig1/Assembly/najNig2.ragtag.scaffold_naNa.REHEADER.MT.fasta"
 
+# Set a directory for the genomic files create by this script
+reference_genome_extra_dir="$HOME/ExtraSSD2/Kaas/Projects/SquamateAlignments/Reference_Genomes/from_Sekar/_completeAssemblies/Naja_nigricollis_najNig1/Assembly/FromRepeatMaskerProcess"
+
+# Make the above directory if it does not exist
+[ ! -d "$reference_genome_extra_dir" ] && mkdir -p "$reference_genome_extra_dir"
+
 # Genome basename
 species_name=$(basename "$reference_genome" .fasta)
 
@@ -26,6 +33,18 @@ repeat_masker_dir="$HOME/ExtraSSD2/Kaas/Projects/SquamateAlignments/SoftMasking/
 # Set the script to create a log file for errors
 log_file="$repeat_masker_dir/Logs/RepeatMasker_run_$(date '+%Y%m%d_%H%M%S').log"
 exec > >(tee -a "$log_file") 2>&1
+
+# Activate the mamba environment before doing anything else
+echo "Activating mamba environment: RepeatMaskAnnot"
+source /home/administrator/mambaforge/bin/activate RepeatMaskAnnot
+
+# Check if the mamba environment is active
+if [[ -z "$CONDA_DEFAULT_ENV" ]]; then
+	echo "No mamba environment is active. Exiting."
+	exit 1
+else
+	echo "Mamba environment active: $CONDA_DEFAULT_ENV"
+fi
 
 # Change the directory to the RepeatMasker directory if it isn't there already
 cd "$repeat_masker_dir" || exit 1
@@ -48,7 +67,7 @@ trap 'error_exit $LINENO' ERR
 # Create a set of masking rounds
 round1="01_SSR_Mask"
 round2="02_Squamate_BovB_CR1"
-round3="03_RepBase_Tetrapoda_Mask"
+round3="03_RepBase_Tetrapoda_masked"
 round4="04_19Snake_Known_Mask"
 round5="05_19Snake_Unknown_Mask"
 round6="06_Full_Mask"
@@ -129,7 +148,7 @@ RepeatMasker \
 	-nolow 2>&1 | tee "Logs/$round2.log"
 
 # Rename the files to something more useful
-round2_genome=$(rename_masked_file "$round2" "BovB_masked")
+round2_genome=$(rename_masked_file "$round2" "BovB_maskeded")
 
 # Round 3: RepBase Tetrapoda masking based on repease 20181026
 # Run RepBase Tetrapoda masking based on repease 20181026
@@ -144,13 +163,14 @@ RepeatMasker \
 	-nolow 2>&1 | tee "Logs/$round3.log"
 
 # Rename the file to something more useful
-round3_genome=$(rename_masked_file "$round3" "Tetrapoda_masked")
+round3_genome=$(rename_masked_file "$round3" "Tetrapoda_maskeded")
 
 
 # Round 4: "19snake" known masking
 # Run "19snake" known masking
 # Note that this comes from the Repclassifier output
 # TODO: This is incomplete, but I need the complete repclassifier out for it
+# TODO: The 19Snakes file comes from round 10 of repclassifier, so maybe write a cp command that copies it to some directory
 echo -e "\e[31mRunning step 4: 18 snake (Schield 2022) + croAtr2 known repeats\e[0m"
 RepeatMasker -pa "$t" \
 	-engine ncbi \
@@ -176,61 +196,70 @@ RepeatMasker \
 	-nolow 2>&1 | tee "Logs/$round5.log"
 
 # Rename the file to something more useful
-round5_genome=$(rename_masked_file "$round5" "04_19Snake_Known_Mask")
+round5_genome=$(rename_masked_file "$round5" "05_19Snake_Unknown_Mask")
 
 
 # Summarize/combine full output
 cp "$round5_genome" "$round6/$species_name.complex_hard-mask.masked.fasta"
 
 
-# .out
+# Concatenate all of the .out files from each of the runs
 echo -e "\e[31mConcatenating .out outputs...\e[0m"
-cat <(cat 01_SSR_mask/croAtr2.ragtag.scaffold_cVir.cAda.REHEADER.MT.simple_mask.out) \
-	<(cat 02_squamate_bovb_cr1/croAtr2.ragtag.scaffold_cVir.cAda.REHEADER.MT.bovb_mask.out | tail -n +4) \
-	<(cat 03_repbase_tetrapoda_mask/croAtr2.ragtag.scaffold_cVir.cAda.REHEADER.MT.tetrapoda_mask.out | tail -n +4) \
-	<(cat 04_19snake_known_mask/croAtr2.ragtag.scaffold_cVir.cAda.REHEADER.MT.snake_known_mask.out | tail -n +4) \
-	<(cat 05_19snake_unknown_mask/croAtr2.ragtag.scaffold_cVir.cAda.REHEADER.MT.snake_unknown_mask.out | tail -n +4) > 06_full_mask/croAtr2.ragtag.scaffold_cVir.cAda.REHEADER.MT.full_mask.out
+cat <(cat "$round1/$species_name.simple_mask.out") \
+	<(cat "$round2/$species_name.BovB_masked.out" | tail -n +4) \
+	<(cat "$round3/$species_name.Tetrapoda_masked.out" | tail -n +4) \
+	<(cat "$round4/$species_name.04_19Snake_Known_Mask.out" | tail -n +4) \
+	<(cat "$round5/$species_name.05_19Snake_Unknown_Mask.out" | tail -n +4) \
+	> "$round6/$species_name.Full_Mask.out"
 
-# .cat
+# Combine RepeatMasker tabular files for all repeats - .out
 echo -e "\e[31mConcatenating .cat.gz outputs...\e[0m"
-cat 01_SSR_mask/croAtr2.ragtag.scaffold_cVir.cAda.REHEADER.MT.simple_mask.cat.gz \
-	02_squamate_bovb_cr1/croAtr2.ragtag.scaffold_cVir.cAda.REHEADER.MT.bovb_mask.cat.gz \
-	03_repbase_tetrapoda_mask/croAtr2.ragtag.scaffold_cVir.cAda.REHEADER.MT.tetrapoda_mask.cat.gz \
-	04_19snake_known_mask/croAtr2.ragtag.scaffold_cVir.cAda.REHEADER.MT.snake_known_mask.cat.gz \
-	05_19snake_unknown_mask/croAtr2.ragtag.scaffold_cVir.cAda.REHEADER.MT.snake_unknown_mask.cat.gz > 06_full_mask/croAtr2.ragtag.scaffold_cVir.cAda.REHEADER.MT.full_mask.cat.gz
+cat "$round1/$species_name.simple_mask.cat.gz" \
+	"$round2/$species_name.BovB_masked.cat.gz" \
+	"$round3/$species_name.Tetrapoda_masked.cat.gz" \
+	"$round4/$species_name.04_19Snake_Known_Mask.cat.gz" \
+	"$round5/$species_name.05_19Snake_Unknown_Mask.cat.gz" \
+	> "$round6/$species_name.Full_Mask.cat.gz"
 
-# .align
+# Combine RepeatMasker repeat alignments for all repeats - .align
 echo -e "\e[31mConcatenating .align outputs...\e[0m"
-cat 01_SSR_mask/croAtr2.ragtag.scaffold_cVir.cAda.REHEADER.MT.simple_mask.align \
-	02_squamate_bovb_cr1/croAtr2.ragtag.scaffold_cVir.cAda.REHEADER.MT.bovb_mask.align \
-	03_repbase_tetrapoda_mask/croAtr2.ragtag.scaffold_cVir.cAda.REHEADER.MT.tetrapoda_mask.align \
-	04_19snake_known_mask/croAtr2.ragtag.scaffold_cVir.cAda.REHEADER.MT.snake_known_mask.align \
-	05_19snake_unknown_mask/croAtr2.ragtag.scaffold_cVir.cAda.REHEADER.MT.snake_unknown_mask.align > 06_full_mask/croAtr2.ragtag.scaffold_cVir.cAda.REHEADER.MT.full_mask.align
+cat "$round1/$species_name.simple_mask.align" \
+	"$round2/$species_name.BovB_masked.align" \
+	"$round3/$species_name.Tetrapoda_masked.align" \
+	"$round4/$species_name.04_19Snake_Known_Mask.align" \
+	"$round5/$species_name.05_19Snake_Unknown_Mask.align" \
+	> "$round6/$species_name.Full_Mask.align"
 
-# .tbl
+# Resummarize repeat compositions from combined analysis of all RepeatMasker rounds
 echo -e "\e[31mProcessing repeats...\e[0m"
-ProcessRepeats -species tetrapoda 06_full_mask/croAtr2.ragtag.scaffold_cVir.cAda.REHEADER.MT.full_mask.cat.gz
+ProcessRepeats \
+	-species tetrapoda \
+	"$round6/$species_name.Full_Mask.cat.gz"
 
-# create repeat landscape files
+# Create repeat landscape files
 echo -e "\e[31mCreating repeat landscape files...\e[0m"
-faToTwoBit /home/administrator/ExtraSSD2/Sid/Crotalus_atrox_genomics/z_Final_Annotation_Genome_Oct2024/croAtr2.ragtag.scaffold_cVir.cAda.REHEADER.MT.fasta /home/administrator/ExtraSSD2/Sid/Crotalus_atrox_genomics/z_Final_Annotation_Genome_Oct2024/croAtr2.ragtag.scaffold_cVir.cAda.REHEADER.MT.2bit
-calcDivergenceFromAlign.pl -s 06_full_mask/croAtr2.ragtag.scaffold_cVir.cAda.REHEADER.MT.full_mask.landscape 06_full_mask/croAtr2.ragtag.scaffold_cVir.cAda.REHEADER.MT.full_mask.align
-createRepeatLandscape.pl -div 06_full_mask/croAtr2.ragtag.scaffold_cVir.cAda.REHEADER.MT.full_mask.landscape \
-	-twoBit /home/administrator/ExtraSSD2/Sid/Crotalus_atrox_genomics/z_Final_Annotation_Genome_Oct2024/croAtr2.ragtag.scaffold_cVir.cAda.REHEADER.MT.2bit \
-	> 06_full_mask/croAtr2.ragtag.scaffold_cVir.cAda.REHEADER.MT.full_mask.landscape.html
+# Convert the reference genome to .2bit
+faToTwoBit "$reference_genome" "$reference_genome_extra_dir/$species_name.2bit"
+# Calculate divergence
+# TODO: Figure out what that even means
+calcDivergenceFromAlign.pl -s "$round6/$species_name.Full_Mask.landscape" "$round6/$species_name.Full_Mask.align"
+# Create repeat landscape
+# TODO: Figure out what that means too
+createRepeatLandscape.pl -div "$round6/$species_name.Full_Mask.landscape" \
+	-twoBit "$reference_genome_extra_dir/$species_name.2bit" \
+	> "$round6/$species_name.Full_Mask.landscape.html"
 
-# create GFFs
+# Create GFFs
 echo -e "\e[31mCreating GFF3...\e[0m"
-rmOutToGFF3.pl 06_full_mask/croAtr2.ragtag.scaffold_cVir.cAda.REHEADER.MT.full_mask.out > 06_full_mask/croAtr2.ragtag.scaffold_cVir.cAda.REHEADER.MT.full_mask.gff3
+rmOutToGFF3.pl "$round6/$species_name.Full_Mask.out" > "$round6/$species_name.Full_Mask.gff3"
 
+# TODO: Figure out what the fuck this does
 echo -e "\e[31mReformatting GFF3 (Daren Card method)...\e[0m"
-cat 06_full_mask/croAtr2.ragtag.scaffold_cVir.cAda.REHEADER.MT.full_mask.gff3 | perl -ane '$id; if(!/^\#/){@F = split(/\t/, $_); chomp $F[-1];$id++; $F[-1] .= "\;ID=$id"; $_ = join("\t", @F)."\n"} print $_' > 06_full_mask/croAtr2.ragtag.scaffold_cVir.cAda.REHEADER.MT.full_mask.reformat.gff3
+cat "$round6/$species_name.full_mask.gff3" \
+| perl -ane '$id; if(!/^\#/){@F = split(/\t/, $_); chomp $F[-1];$id++; $F[-1] .= "\;ID=$id"; $_ = join("\t", @F)."\n"} print $_' \
+> "$round6/$species_name.Full_Mask.reformat.gff3"
 
-# filter out simple repeats
-# echo -e "\e[31mFiltering out simple repeats...\e[0m"
-# grep -v -e "Satellite" -e ")n" -e "-rich" 06_full_mask/croAtr2.ragtag.scaffold_cVir.cAda.REHEADER.MT.full_mask.reformat.gff3 > 06_full_mask/croAtr2.ragtag.scaffold_cVir.cAda.REHEADER.MT.full_mask.reformat.complex.gff3
-
-# soft-mask genome
+# Beggin soft-masking the genome
 echo -e "\e[31mSoft masking the reference genome...\e[0m"
 
 # Find original Ns (come from scaffolding of the original pre-masked genome) and then find all Ns in the hard-masked genome
@@ -239,29 +268,46 @@ echo -e "\e[31mSoft masking the reference genome...\e[0m"
 # Combine these sets of coordinates to get all masked regions and soft mask them
 
 # TODO: Fix this to make it faster
-# FIXME: This is slow as shit
-### seqkit takes extremely long and should be optimized
+# FIXME: This is slow as shit apparently
+# seqkit takes extremely long and should be optimized
 
-seqkit locate --bed -rPp "N+" /home/administrator/ExtraSSD2/Sid/Crotalus_atrox_genomics/z_Final_Annotation_Genome_Oct2024/croAtr2.ragtag.scaffold_cVir.cAda.REHEADER.MT.fasta > original_N_coords.bed
+# Take the reference genome and find all the hard masked features where Ns are
+seqkit locate \
+	--bed \
+	-rPp "N+" "$reference_genome" \
+	> original_N_coords.bed
+# Merge the book end/overlapping features into a bed file, which come from the temporary bedfile above
 bedtools merge -i original_N_coords.bed > consolidated_original_N_coords.bed
 
-seqkit locate --bed -rPp "N+" 06_full_mask/croAtr2.ragtag.scaffold_cVir.cAda.REHEADER.MT.complex_hard-mask.masked.fasta > masked_N_coords.bed
+# Take the hard mask genome and find all of the hard masked features where Ns are
+seqkit locate \
+	--bed -rPp "N+" "$round6/$species_name.complex_hard-mask.masked.fasta" \
+	> masked_N_coords.bed
+# Merge the overlapping features into a single bed file
 bedtools merge -i masked_N_coords.bed > consolidated_masked_N_coords.bed
 
+# Subtract the features in the original genome from those in the masked genome to get features found only in the masked genome
 bedtools subtract -a consolidated_masked_N_coords.bed -b consolidated_original_N_coords.bed > consolidated_new_masked_N_coords.bed
 
-seqkit locate --bed -rPp "[acgtryswkmbdhvn]+" 01_SSR_mask/croAtr2.ragtag.scaffold_cVir.cAda.REHEADER.MT.simple_mask.masked.fasta > soft_masked_coords.bed
+# Take the soft masked genome from the first round and create a bed file of those features
+seqkit locate \
+	--bed -rPp "[acgtryswkmbdhvn]+" "$round1_genome" \
+	> soft_masked_coords.bed
+# Merge the soft maskeed overlapping features
 bedtools merge -i soft_masked_coords.bed > consolidated_soft_masked_coords.bed
 
+# Concatenate the masked files together
 cat consolidated_new_masked_N_coords.bed consolidated_soft_masked_coords.bed | sort -k1,1 -k2,2n > all_masked_coords.bed
 
-bedtools maskfasta -soft -fi /home/administrator/ExtraSSD2/Sid/Crotalus_atrox_genomics/z_Final_Annotation_Genome_Oct2024/croAtr2.ragtag.scaffold_cVir.cAda.REHEADER.MT.fasta \
+# Soft mask the reference genome from the coordinates here
+bedtools maskfasta -soft -fi "$reference_genome" \
 	-bed all_masked_coords.bed \
-	-fo 06_full_mask/croAtr2.ragtag.scaffold_cVir.cAda.REHEADER.MT.full_mask.soft.fasta
-	
+	-fo "$round6/$species_name.Full_Mask.soft.fasta"
+
+# Remove the temporary bed files
 rm *.bed
 
-# compress outputs
+# Compress the outputs to save space
 echo -e "\e[31mCompressing outputs...\e[0m"
 gzip */*.out
 gzip */*.fasta
