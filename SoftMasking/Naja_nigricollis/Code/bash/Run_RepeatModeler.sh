@@ -33,7 +33,7 @@ if [ ! -f "$output_directory/$database_name.nsq" ]; then
 	BuildDatabase -name "$output_directory/$database_name" \
 		-engine rmblast \
 		"$reference_genome" 2>&1 | tee "$output_directory/Logs/BuildDatabase.log"
-elsne
+else
 	echo "Database already exists at the specified path. Skipping."
 fi
 

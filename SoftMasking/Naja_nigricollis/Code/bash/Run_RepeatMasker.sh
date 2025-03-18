@@ -1,5 +1,4 @@
 #!/bin/bash
-# QUESTION: Figure out how Sid typed all of this shit out and somehow not fuck up
 : <<'ScriptDescription'
 Date: 2025/03/17
 This script is designed to run RepeatMasker, and is based off of Sid's script and Daren's blog post.
@@ -70,7 +69,7 @@ trap 'error_exit $LINENO' ERR
 # Create a set of masking rounds
 round1="01_SSR_Mask"
 round2="02_Squamate_BovB_CR1"
-round3="03_RepBase_Tetrapoda_masked"
+round3="03_RepBase_Tetrapoda_mask"
 round4="04_19Snake_Known_Mask"
 round5="05_19Snake_Unknown_Mask"
 round6="06_Full_Mask"
@@ -87,31 +86,6 @@ done
 # Set the number of threads for RepeatMasker -pa to use
 t=40
 
-# TODO: You need to check if this actually works
-# Create a function to rename masked files to something more useful
-rename_masked_file() {
-    local directory="$1"   # Directory where the file is located
-    local new_suffix="$2"  # New suffix to replace ".masked.fasta"
-
-    # Find the masked genome file
-    local masked_file
-    masked_file=$(find "$directory" -type f -name "*.masked.fasta" | head -n 1)
-
-    # Check if a file was found
-    if [[ -z "$masked_file" ]]; then
-        echo "Error: No masked genome file found in $directory"
-        exit 1
-    fi
-
-    # Construct the new filename
-    local new_masked_file="${masked_file/.masked.fasta/.$new_suffix.fasta}"
-
-    # Rename the file
-    mv "$masked_file" "$new_masked_file"
-
-    # Return the new filename (optional)
-    echo "$new_masked_file"
-}
 
 # Round 1: SSR masking
 # Run simple sequence repeat (SSR) masking
@@ -127,16 +101,24 @@ RepeatMasker \
 	-xsmall \
 	"$reference_genome" 2>&1 | tee "Logs/$round1.log"
 
+# Check if the files were created, exit otherwise
+if ! find "$round1" -maxdepth 1 \( -name "*.fasta.masked" -o -name "*fasta.align" -o -name "*.fasta.cat.gz" -o -name "*.fasta.out" -o -name "*.fasta.tbl" \) | grep -q .; then
+    echo "Error: Files for $round1 were not created."
+    exit 1
+else
+    echo "Files found for $round1. Continuing to the next round."
+fi
+
 # Rename some of the files to make it more clear what they are
 rename 's/fasta/simple_mask/g' "$round1"/*
-rename 's/.masked$/.masked.fasta/g' "$round1"/*
+rename 's/.masked$/.fasta/g' "$round1"/*
 
 
 # Set the repeat elements library for round 2
 bovb_cr1="$HOME/ExtraSSD2/Kaas/Projects/SquamateAlignments/SoftMasking/known_repeat_elements/CR1_BovB_Squamates_TElib.fasta"
 
 # Find the output file from Round 1
-round1_genome=$(find "$round1" -type f -name "*.masked.fasta" | head -n 1)
+round1_genome=$(find "$round1" -type f -name "*.simple_mask.fasta" | head -n 1)
 
 # Round 2: BovB/CR1 masking
 # run BovB/CR1 masking
@@ -150,8 +132,21 @@ RepeatMasker \
 	"$round1_genome" \
 	-nolow 2>&1 | tee "Logs/$round2.log"
 
-# Rename the files to something more useful
-round2_genome=$(rename_masked_file "$round2" "BovB_maskeded")
+# Check if the files were created, exit otherwise
+if ! find "$round2" -maxdepth 1 \( -name "*.fasta.masked" -o -name "*.fasta.align" -o -name "*.fasta.cat.gz" -o -name "*.fasta.out" -o -name "*.fasta.tbl" \) | grep -q .; then
+    echo "Error: Files for $round2 were not created."
+    exit 1
+else
+    echo "Files found for $round2. Continuing to the next round."
+fi
+
+# Rename some of the files to make it more clear what they are
+rename 's/simple_mask.fasta/BovB_mask/g' "$round2"/*
+rename 's/.masked$/.fasta/g' "$round2"/*
+
+
+# Find the output file from Round 1
+round2_genome=$(find "$round2" -type f -name "*.BovB_mask.fasta" | head -n 1)
 
 # Round 3: RepBase Tetrapoda masking based on repease 20181026
 # Run RepBase Tetrapoda masking based on repease 20181026
@@ -165,11 +160,22 @@ RepeatMasker \
 	"$round2_genome" \
 	-nolow 2>&1 | tee "Logs/$round3.log"
 
-# Rename the file to something more useful
-round3_genome=$(rename_masked_file "$round3" "Tetrapoda_maskeded")
+# Check if the files were created, exit otherwise
+if ! find "$round3" -maxdepth 1 \( -name "*.fasta.masked" -o -name "*.fasta.align" -o -name "*.fasta.cat.gz" -o -name "*.fasta.out" -o -name "*.fasta.tbl" \) | grep -q .; then
+    echo "Error: Files for $round3 were not created."
+    exit 1
+else
+    echo "Files found for $round3. Continuing to the next round."
+fi
+
+# Rename some of the files to make it more clear what they are
+rename 's/BovB_mask.fasta/Tetrapoda_mask/g' "$round3"/*
+rename 's/.masked$/.fasta/g' "$round3"/*
 
 
 # Round 4: "19snake" known masking
+# Find the FASTA from round 3
+round3_genome=$(find "$round3" -type f -name "*.Tetrapoda_mask.fasta" | head -n 1)
 
 # Set path for the 10th round of repclassifier
 known_library="../1_Repclassifier/round-10_Self/round-10_Self.known"
@@ -192,11 +198,22 @@ RepeatMasker -pa "$t" \
 	"$round3_genome" \
 	-nolow 2>&1 | tee "Logs/$round4.log"
 
-# Rename the file to something more useful
-round4_genome=$(rename_masked_file "$round4" "04_19Snake_Known_Mask")
+# Check if the files were created, exit otherwise
+if ! find "$round4" -maxdepth 1 \( -name "*.fasta.masked" -o -name "*.fasta.align" -o -name "*.fasta.cat.gz" -o -name "*.fasta.out" -o -name "*.fasta.tbl" \) | grep -q .; then
+    echo "Error: Files for $round4 were not created."
+    exit 1
+else
+    echo "Files found for $round4. Continuing to the next round."
+fi
+
+# Rename some of the files to make it more clear what they are
+rename 's/Tetrapoda_mask.fasta/19snake_known_mask/g' "$round4"/*
+rename 's/.masked$/.fasta/g' "$round4"/*
 
 
 # Round 5: 05_19 Snake unknown masking
+# Find the FASTA file from round 4
+round4_genome=$(find "$round4" -type f -name "*.19snake_known_mask.fasta" | head -n 1)
 
 # Set path for the 10th round of repclassifier
 unknown_library="../1_Repclassifier/round-10_Self/round-10_Self.unknown"
@@ -207,7 +224,6 @@ new_unknown_19snakes_library="../1_Repclassifier/round-10_Self/19Snakes_with_$sp
 
 # Concatenate the two files togehter
 cat "$custom_18snake_unknown_repeats" "$unknown_library" > "$new_unknown_19snakes_library"
-
 
 # run "19snake" unknown masking
 echo -e "\e[31mRunning step 5: 18 snake (Schield 2022) + croAtr2 unknown repeats\e[0m"
@@ -220,39 +236,50 @@ RepeatMasker \
 	"$round4_genome" \
 	-nolow 2>&1 | tee "Logs/$round5.log"
 
-# Rename the file to something more useful
-round5_genome=$(rename_masked_file "$round5" "05_19Snake_Unknown_Mask")
+# Check if the files were created, exit otherwise
+if ! find "$round5" -maxdepth 1 \( -name "*.fasta.masked" -o -name "*.fasta.align" -o -name "*.fasta.cat.gz" -o -name "*.fasta.out" -o -name "*.fasta.tbl" \) | grep -q .; then
+    echo "Error: Files for $round5 were not created."
+    exit 1
+else
+    echo "Files found for $round5. Continuing to the next round."
+fi
+
+# Rename some of the files to make it more clear what they are
+rename 's/19snake_known_mask.fasta/19snake_unknown_mask/g' "$round5"/*
+rename 's/.masked$/.masked.fasta/g' "$round5"/*
+
+# Find the FASTA file from round 4
+round5_genome=$(find "$round5" -type f -name "*.19snake_unknown_mask.fasta" | head -n 1)
 
 
 # Summarize/combine full output
 cp "$round5_genome" "$round6/$species_name.complex_hard-mask.masked.fasta"
 
-
 # Concatenate all of the .out files from each of the runs
 echo -e "\e[31mConcatenating .out outputs...\e[0m"
 cat <(cat "$round1/$species_name.simple_mask.out") \
-	<(cat "$round2/$species_name.BovB_masked.out" | tail -n +4) \
-	<(cat "$round3/$species_name.Tetrapoda_masked.out" | tail -n +4) \
-	<(cat "$round4/$species_name.04_19Snake_Known_Mask.out" | tail -n +4) \
-	<(cat "$round5/$species_name.05_19Snake_Unknown_Mask.out" | tail -n +4) \
+	<(cat "$round2/$species_name.BovB_mask.out" | tail -n +4) \
+	<(cat "$round3/$species_name.Tetrapoda_mask.out" | tail -n +4) \
+	<(cat "$round4/$species_name.19snake_known_mask.out" | tail -n +4) \
+	<(cat "$round5/$species_name.19snake_unknown_mask.out" | tail -n +4) \
 	> "$round6/$species_name.Full_Mask.out"
 
 # Combine RepeatMasker tabular files for all repeats - .out
 echo -e "\e[31mConcatenating .cat.gz outputs...\e[0m"
 cat "$round1/$species_name.simple_mask.cat.gz" \
-	"$round2/$species_name.BovB_masked.cat.gz" \
-	"$round3/$species_name.Tetrapoda_masked.cat.gz" \
-	"$round4/$species_name.04_19Snake_Known_Mask.cat.gz" \
-	"$round5/$species_name.05_19Snake_Unknown_Mask.cat.gz" \
+	"$round2/$species_name.BovB_mask.cat.gz" \
+	"$round3/$species_name.Tetrapoda_mask.cat.gz" \
+	"$round4/$species_name.19snake_known_mask.cat.gz" \
+	"$round5/$species_name.19snake_unknown_mask.cat.gz" \
 	> "$round6/$species_name.Full_Mask.cat.gz"
 
 # Combine RepeatMasker repeat alignments for all repeats - .align
 echo -e "\e[31mConcatenating .align outputs...\e[0m"
 cat "$round1/$species_name.simple_mask.align" \
-	"$round2/$species_name.BovB_masked.align" \
-	"$round3/$species_name.Tetrapoda_masked.align" \
-	"$round4/$species_name.04_19Snake_Known_Mask.align" \
-	"$round5/$species_name.05_19Snake_Unknown_Mask.align" \
+	"$round2/$species_name.BovB_mask.align" \
+	"$round3/$species_name.Tetrapoda_mask.align" \
+	"$round4/$species_name.19snake_known_mask.align" \
+	"$round5/$species_name.19snake_unknown_mask.align" \
 	> "$round6/$species_name.Full_Mask.align"
 
 # Resummarize repeat compositions from combined analysis of all RepeatMasker rounds
