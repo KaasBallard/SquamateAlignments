@@ -1,5 +1,5 @@
 #!/bin/bash
-# TODO: Figure out how Sid typed all of this shit out and somehow not fuck up
+# QUESTION: Figure out how Sid typed all of this shit out and somehow not fuck up
 : <<'ScriptDescription'
 Date: 2025/03/17
 This script is designed to run RepeatMasker, and is based off of Sid's script and Daren's blog post.
@@ -23,6 +23,9 @@ reference_genome_extra_dir="$HOME/ExtraSSD2/Kaas/Projects/SquamateAlignments/Ref
 
 # Genome basename
 species_name=$(basename "$reference_genome" .fasta)
+
+# Species name abreviation
+species_abbreviation="najNig2"
 
 # Set the RepeatMasker directory
 repeat_masker_dir="$HOME/ExtraSSD2/Kaas/Projects/SquamateAlignments/SoftMasking/Naja_nigricollis/Results/2_RepeatMasker"
@@ -167,29 +170,51 @@ round3_genome=$(rename_masked_file "$round3" "Tetrapoda_maskeded")
 
 
 # Round 4: "19snake" known masking
+
+# Set path for the 10th round of repclassifier
+known_library="../1_Repclassifier/round-10_Self/round-10_Self.known"
+# Define the custom known file for round 6 that Todd made containing 18 snake repeat elements
+custom_18snake_known_repeats="$HOME/ExtraSSD2/Kaas/Projects/SquamateAlignments/SoftMasking/known_repeat_elements/18Snakes.Known.clust.fasta"
+# Set the new file path
+new_known_19snakes_library="../1_Repclassifier/round-10_Self/19Snakes_with_$species_abbreviation.Known.clust.fasta"
+
+# Concatenate the two files togehter
+cat "$custom_18snake_known_repeats" "$known_library" > "$new_known_19snakes_library"
+
 # Run "19snake" known masking
 # Note that this comes from the Repclassifier output
-# TODO: This is incomplete, but I need the complete repclassifier out for it
-# TODO: The 19Snakes file comes from round 10 of repclassifier, so maybe write a cp command that copies it to some directory
 echo -e "\e[31mRunning step 4: 18 snake (Schield 2022) + croAtr2 known repeats\e[0m"
 RepeatMasker -pa "$t" \
 	-engine ncbi \
-	-lib ./z_repeat_libraries/19Snakes.Known.clust.fasta \
+	-lib "$new_known_19snakes_library" \
 	-a \
-	-dir 04_19snake_known_mask \
+	-dir "$round4" \
 	"$round3_genome" \
-	-nolow 2>&1 | tee "Logs/$round5.log"
+	-nolow 2>&1 | tee "Logs/$round4.log"
 
 # Rename the file to something more useful
 round4_genome=$(rename_masked_file "$round4" "04_19Snake_Known_Mask")
 
+
 # Round 5: 05_19 Snake unknown masking
+
+# Set path for the 10th round of repclassifier
+unknown_library="../1_Repclassifier/round-10_Self/round-10_Self.unknown"
+# Define the custom known file for round 6 that Todd made containing 18 snake repeat elements
+custom_18snake_unknown_repeats="$HOME/ExtraSSD2/Kaas/Projects/SquamateAlignments/SoftMasking/known_repeat_elements/18Snakes.Unknown.clust.fasta"
+# Set the new file path
+new_unknown_19snakes_library="../1_Repclassifier/round-10_Self/19Snakes_with_$species_abbreviation.Unknown.clust.fasta"
+
+# Concatenate the two files togehter
+cat "$custom_18snake_unknown_repeats" "$unknown_library" > "$new_unknown_19snakes_library"
+
+
 # run "19snake" unknown masking
 echo -e "\e[31mRunning step 5: 18 snake (Schield 2022) + croAtr2 unknown repeats\e[0m"
 RepeatMasker \
 	-pa "$t" \
 	-engine ncbi \
-	-lib ./z_repeat_libraries/19Snakes.Unknown.clust.fasta \
+	-lib "$new_unknown_19snakes_library" \
 	-a \
 	-dir "$round5" \
 	"$round4_genome" \
@@ -241,10 +266,10 @@ echo -e "\e[31mCreating repeat landscape files...\e[0m"
 # Convert the reference genome to .2bit
 faToTwoBit "$reference_genome" "$reference_genome_extra_dir/$species_name.2bit"
 # Calculate divergence
-# TODO: Figure out what that even means
+# QUESTION: Figure out what that even means
 calcDivergenceFromAlign.pl -s "$round6/$species_name.Full_Mask.landscape" "$round6/$species_name.Full_Mask.align"
 # Create repeat landscape
-# TODO: Figure out what that means too
+# QUESTION: Figure out what that means too
 createRepeatLandscape.pl -div "$round6/$species_name.Full_Mask.landscape" \
 	-twoBit "$reference_genome_extra_dir/$species_name.2bit" \
 	> "$round6/$species_name.Full_Mask.landscape.html"
@@ -255,7 +280,7 @@ rmOutToGFF3.pl "$round6/$species_name.Full_Mask.out" > "$round6/$species_name.Fu
 
 # TODO: Figure out what the fuck this does
 echo -e "\e[31mReformatting GFF3 (Daren Card method)...\e[0m"
-cat "$round6/$species_name.full_mask.gff3" \
+cat "$round6/$species_name.Full_Mask.gff3" \
 | perl -ane '$id; if(!/^\#/){@F = split(/\t/, $_); chomp $F[-1];$id++; $F[-1] .= "\;ID=$id"; $_ = join("\t", @F)."\n"} print $_' \
 > "$round6/$species_name.Full_Mask.reformat.gff3"
 
@@ -268,7 +293,7 @@ echo -e "\e[31mSoft masking the reference genome...\e[0m"
 # Combine these sets of coordinates to get all masked regions and soft mask them
 
 # TODO: Fix this to make it faster
-# FIXME: This is slow as shit apparently
+# OPTIMIZE: This is slow as shit apparently
 # seqkit takes extremely long and should be optimized
 
 # Take the reference genome and find all the hard masked features where Ns are
