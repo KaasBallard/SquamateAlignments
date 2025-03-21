@@ -7,7 +7,7 @@ RepeatMasker can be found here:
 https://www.repeatmasker.org/
 https://github.com/Dfam-consortium/RepeatMasker
 
-The aformentioned blog post can be found here:
+The aforementioned blog post can be found here:
 https://darencard.net/blog/2022-07-09-genome-repeat-annotation/
 ScriptDescription
 
@@ -63,6 +63,20 @@ error_exit() {
     exit 1
 }
 
+# Function to check if the each round of RepeatMasker was successful
+check_round() {
+	local round_dir=$1
+
+	find "$round_dir" -maxdepth 1 \( -name "*.fasta" -o -name "*.align" -o -name "*.cat.gz" -o -name "*.out" -o -name "*.tbl" \) | grep -q .
+}
+
+# Function to check if the each round of RepeatMasker was successful using the base run before files where renamed
+check_round2() {
+	local round_dir=$1
+
+	find "$round_dir" -maxdepth 1 \( -name "*.fasta.masked" -o -name "*.fasta.align" -o -name "*.fasta.cat.gz" -o -name "*.fasta.out" -o -name "*.fasta.tbl" \) | grep -q .
+}
+
 # Trap errors and report the line number
 trap 'error_exit $LINENO' ERR
 
@@ -92,26 +106,34 @@ t=40
 # Note that Daren likes to do this first as it sames time to mask all of the simple repeats, 
 # and it keeps simple, complex, and interspersed rpeats (e.g. TEs) seperate
 echo -e "\e[31mRunning step 1: SSR masking\e[0m"
-RepeatMasker \
-	-pa "$t" \
-	-a \
-	-e ncbi \
-	-dir "$round1" \
-	-noint \
-	-xsmall \
-	"$reference_genome" 2>&1 | tee "Logs/$round1.log"
-
-# Check if the files were created, exit otherwise
-if ! find "$round1" -maxdepth 1 \( -name "*.fasta.masked" -o -name "*fasta.align" -o -name "*.fasta.cat.gz" -o -name "*.fasta.out" -o -name "*.fasta.tbl" \) | grep -q .; then
-    echo "Error: Files for $round1 were not created."
-    exit 1
+if check_round "$round1"; then
+	echo -e "\e[31Files found for $round1. Skipping.\e[0m"
 else
-    echo "Files found for $round1. Continuing to the next round."
+	echo -e "\e[31Files not found for $round1. Running RepeatMasker now.\e[0m"
+
+	# Run RepeatMasker
+	RepeatMasker \
+		-pa "$t" \
+		-a \
+		-e ncbi \
+		-dir "$round1" \
+		-noint \
+		-xsmall \
+		"$reference_genome" 2>&1 | tee "Logs/$round1.log"
+
+	# Rename some of the files to make it more clear what they are
+	rename 's/fasta/simple_mask/g' "$round1"/*
+	rename 's/.masked$/.fasta/g' "$round1"/*
+
+	# Check if the files were created, exit otherwise
+	if check_round2 "$round1"; then
+		echo "Files found for $round1. Continuing to the next round."
+	else
+		echo "Error: Files for $round1 were not created."
+		exit 1
+	fi
 fi
 
-# Rename some of the files to make it more clear what they are
-rename 's/fasta/simple_mask/g' "$round1"/*
-rename 's/.masked$/.fasta/g' "$round1"/*
 
 
 # Set the repeat elements library for round 2
@@ -123,26 +145,34 @@ round1_genome=$(find "$round1" -type f -name "*.simple_mask.fasta" | head -n 1)
 # Round 2: BovB/CR1 masking
 # run BovB/CR1 masking
 echo -e "\e[31mRunning step 2: BovB/CR1 masking\e[0m"
-RepeatMasker \
-	-pa "$t" \
-	-engine ncbi \
-	-lib "$bovb_cr1" \
-	-a \
-	-dir "$round2" \
-	"$round1_genome" \
-	-nolow 2>&1 | tee "Logs/$round2.log"
-
-# Check if the files were created, exit otherwise
-if ! find "$round2" -maxdepth 1 \( -name "*.fasta.masked" -o -name "*.fasta.align" -o -name "*.fasta.cat.gz" -o -name "*.fasta.out" -o -name "*.fasta.tbl" \) | grep -q .; then
-    echo "Error: Files for $round2 were not created."
-    exit 1
+if check_round "$round2"; then
+	echo -e "\e[31Files found for $round2. Skipping.\e[0m"
 else
-    echo "Files found for $round2. Continuing to the next round."
+	echo -e "\e[31Files not found for $round2. Running RepeatMasker now.\e[0m"
+
+	# Run RepeatMasker
+	RepeatMasker \
+		-pa "$t" \
+		-engine ncbi \
+		-lib "$bovb_cr1" \
+		-a \
+		-dir "$round2" \
+		"$round1_genome" \
+		-nolow 2>&1 | tee "Logs/$round2.log"
+
+	# Rename some of the files to make it more clear what they are
+	rename 's/simple_mask.fasta/BovB_mask/g' "$round2"/*
+	rename 's/.masked$/.fasta/g' "$round2"/*
+
+	# Check if the files were created, exit otherwise
+	if check_round2 "$round2"; then
+		echo "Files found for $round2. Continuing to the next round."
+	else
+		echo "Error: Files for $round2 were not created."
+		exit 1
+	fi
 fi
 
-# Rename some of the files to make it more clear what they are
-rename 's/simple_mask.fasta/BovB_mask/g' "$round2"/*
-rename 's/.masked$/.fasta/g' "$round2"/*
 
 
 # Find the output file from Round 1
@@ -151,26 +181,34 @@ round2_genome=$(find "$round2" -type f -name "*.BovB_mask.fasta" | head -n 1)
 # Round 3: RepBase Tetrapoda masking based on repease 20181026
 # Run RepBase Tetrapoda masking based on repease 20181026
 echo -e "\e[31mRunning step 3: RepBase Tetrapoda masking\e[0m"
-RepeatMasker \
-	-pa "$t" \
-	-engine ncbi \
-	-species tetrapoda \
-	-a \
-	-dir "$round3" \
-	"$round2_genome" \
-	-nolow 2>&1 | tee "Logs/$round3.log"
-
-# Check if the files were created, exit otherwise
-if ! find "$round3" -maxdepth 1 \( -name "*.fasta.masked" -o -name "*.fasta.align" -o -name "*.fasta.cat.gz" -o -name "*.fasta.out" -o -name "*.fasta.tbl" \) | grep -q .; then
-    echo "Error: Files for $round3 were not created."
-    exit 1
+if check_round "$round3"; then
+	echo -e "\e[31Files found for $round3. Skipping.\e[0m"
 else
-    echo "Files found for $round3. Continuing to the next round."
-fi
+	echo -e "\e[31Files not found for $round3. Running RepeatMasker now.\e[0m"
 
-# Rename some of the files to make it more clear what they are
-rename 's/BovB_mask.fasta/Tetrapoda_mask/g' "$round3"/*
-rename 's/.masked$/.fasta/g' "$round3"/*
+	# Run RepeatMasker
+	RepeatMasker \
+		-pa "$t" \
+		-engine ncbi \
+		-species tetrapoda \
+		-a \
+		-dir "$round3" \
+		"$round2_genome" \
+		-nolow 2>&1 | tee "Logs/$round3.log"
+
+	# Rename some of the files to make it more clear what they are
+	rename 's/BovB_mask.fasta/Tetrapoda_mask/g' "$round3"/*
+	rename 's/.masked$/.fasta/g' "$round3"/*
+
+
+	# Check if the files were created, exit otherwise
+	if check_round2 "$round3"; then
+		echo "Files found for $round3. Continuing to the next round."
+	else
+		echo "Error: Files for $round3 were not created."
+		exit 1
+	fi
+fi
 
 
 # Round 4: "19snake" known masking
@@ -189,26 +227,34 @@ cat "$custom_18snake_known_repeats" "$known_library" > "$new_known_19snakes_libr
 
 # Run "19snake" known masking
 # Note that this comes from the Repclassifier output
-echo -e "\e[31mRunning step 4: 18 snake (Schield 2022) + croAtr2 known repeats\e[0m"
-RepeatMasker -pa "$t" \
-	-engine ncbi \
-	-lib "$new_known_19snakes_library" \
-	-a \
-	-dir "$round4" \
-	"$round3_genome" \
-	-nolow 2>&1 | tee "Logs/$round4.log"
-
-# Check if the files were created, exit otherwise
-if ! find "$round4" -maxdepth 1 \( -name "*.fasta.masked" -o -name "*.fasta.align" -o -name "*.fasta.cat.gz" -o -name "*.fasta.out" -o -name "*.fasta.tbl" \) | grep -q .; then
-    echo "Error: Files for $round4 were not created."
-    exit 1
+echo -e "\e[31mRunning step 4: 18 snake (Schield 2022) + $species_abbreviation known repeats\e[0m"
+if check_round "$round4"; then
+	echo -e "\e[31Files found for $round4. Skipping.\e[0m"
 else
-    echo "Files found for $round4. Continuing to the next round."
-fi
+	echo -e "\e[31Files not found for $round4. Running RepeatMasker now.\e[0m"
 
-# Rename some of the files to make it more clear what they are
-rename 's/Tetrapoda_mask.fasta/19snake_known_mask/g' "$round4"/*
-rename 's/.masked$/.fasta/g' "$round4"/*
+	# Run RepeatMasker
+	RepeatMasker -pa "$t" \
+		-engine ncbi \
+		-lib "$new_known_19snakes_library" \
+		-a \
+		-dir "$round4" \
+		"$round3_genome" \
+		-nolow 2>&1 | tee "Logs/$round4.log"
+
+	# Rename some of the files to make it more clear what they are
+	rename 's/Tetrapoda_mask.fasta/19snake_known_mask/g' "$round4"/*
+	rename 's/.masked$/.fasta/g' "$round4"/*
+
+
+	# Check if the files were created, exit otherwise
+	if check_round2 "$round4"; then
+		echo "Files found for $round4. Continuing to the next round."
+	else
+		echo "Error: Files for $round4 were not created."
+		exit 1
+	fi
+fi
 
 
 # Round 5: 05_19 Snake unknown masking
@@ -226,77 +272,90 @@ new_unknown_19snakes_library="../1_Repclassifier/round-10_Self/19Snakes_with_$sp
 cat "$custom_18snake_unknown_repeats" "$unknown_library" > "$new_unknown_19snakes_library"
 
 # run "19snake" unknown masking
-echo -e "\e[31mRunning step 5: 18 snake (Schield 2022) + croAtr2 unknown repeats\e[0m"
-RepeatMasker \
-	-pa "$t" \
-	-engine ncbi \
-	-lib "$new_unknown_19snakes_library" \
-	-a \
-	-dir "$round5" \
-	"$round4_genome" \
-	-nolow 2>&1 | tee "Logs/$round5.log"
-
-# Check if the files were created, exit otherwise
-if ! find "$round5" -maxdepth 1 \( -name "*.fasta.masked" -o -name "*.fasta.align" -o -name "*.fasta.cat.gz" -o -name "*.fasta.out" -o -name "*.fasta.tbl" \) | grep -q .; then
-    echo "Error: Files for $round5 were not created."
-    exit 1
+echo -e "\e[31mRunning step 5: 18 snake (Schield 2022) + $species_abbreviation unknown repeats\e[0m"
+if check_round "$round5"; then
+	echo -e "\e[31Files found for $round5. Skipping.\e[0m"
 else
-    echo "Files found for $round5. Continuing to the next round."
+	echo -e "\e[31Files not found for $round5. Running RepeatMasker now.\e[0m"
+
+	# Run RepeatMasker
+	RepeatMasker \
+		-pa "$t" \
+		-engine ncbi \
+		-lib "$new_unknown_19snakes_library" \
+		-a \
+		-dir "$round5" \
+		"$round4_genome" \
+		-nolow 2>&1 | tee "Logs/$round5.log"
+	
+	# Rename some of the files to make it more clear what they are
+	rename 's/19snake_known_mask.fasta/19snake_unknown_mask/g' "$round5"/*
+	rename 's/.masked$/.fasta/g' "$round5"/*
+
+
+	# Check if the files were created, exit otherwise
+	if check_round2 "$round5"; then
+		echo "Files found for $round5. Continuing to the next round."
+	else
+		echo "Error: Files for $round5 were not created."
+		exit 1
+	fi
 fi
 
-# Rename some of the files to make it more clear what they are
-rename 's/19snake_known_mask.fasta/19snake_unknown_mask/g' "$round5"/*
-rename 's/.masked$/.masked.fasta/g' "$round5"/*
 
 # Find the FASTA file from round 4
 round5_genome=$(find "$round5" -type f -name "*.19snake_unknown_mask.fasta" | head -n 1)
 
+if check_round "$round6"; then
+	echo -e "\e[31Files found for $round6. Skipping.\e[0m"
+else
+	echo -e "\e[31Files not found for $round6. Concatenating outputs now.\e[0m"
 
-# Summarize/combine full output
-cp "$round5_genome" "$round6/$species_name.complex_hard-mask.masked.fasta"
+	# Summarize/combine full output
+	cp "$round5_genome" "$round6/$species_name.complex_hard-mask.masked.fasta"
 
-# Concatenate all of the .out files from each of the runs
-echo -e "\e[31mConcatenating .out outputs...\e[0m"
-cat <(cat "$round1/$species_name.simple_mask.out") \
-	<(cat "$round2/$species_name.BovB_mask.out" | tail -n +4) \
-	<(cat "$round3/$species_name.Tetrapoda_mask.out" | tail -n +4) \
-	<(cat "$round4/$species_name.19snake_known_mask.out" | tail -n +4) \
-	<(cat "$round5/$species_name.19snake_unknown_mask.out" | tail -n +4) \
-	> "$round6/$species_name.Full_Mask.out"
+	# Concatenate all of the .out files from each of the runs
+	echo -e "\e[31mConcatenating .out outputs...\e[0m"
+	cat <(cat "$round1/$species_name.simple_mask.out") \
+		<(cat "$round2/$species_name.BovB_mask.out" | tail -n +4) \
+		<(cat "$round3/$species_name.Tetrapoda_mask.out" | tail -n +4) \
+		<(cat "$round4/$species_name.19snake_known_mask.out" | tail -n +4) \
+		<(cat "$round5/$species_name.19snake_unknown_mask.out" | tail -n +4) \
+		> "$round6/$species_name.Full_Mask.out"
 
-# Combine RepeatMasker tabular files for all repeats - .out
-echo -e "\e[31mConcatenating .cat.gz outputs...\e[0m"
-cat "$round1/$species_name.simple_mask.cat.gz" \
-	"$round2/$species_name.BovB_mask.cat.gz" \
-	"$round3/$species_name.Tetrapoda_mask.cat.gz" \
-	"$round4/$species_name.19snake_known_mask.cat.gz" \
-	"$round5/$species_name.19snake_unknown_mask.cat.gz" \
-	> "$round6/$species_name.Full_Mask.cat.gz"
+	# Combine RepeatMasker tabular files for all repeats - .out
+	echo -e "\e[31mConcatenating .cat.gz outputs...\e[0m"
+	cat "$round1/$species_name.simple_mask.cat.gz" \
+		"$round2/$species_name.BovB_mask.cat.gz" \
+		"$round3/$species_name.Tetrapoda_mask.cat.gz" \
+		"$round4/$species_name.19snake_known_mask.cat.gz" \
+		"$round5/$species_name.19snake_unknown_mask.cat.gz" \
+		> "$round6/$species_name.Full_Mask.cat.gz"
 
-# Combine RepeatMasker repeat alignments for all repeats - .align
-echo -e "\e[31mConcatenating .align outputs...\e[0m"
-cat "$round1/$species_name.simple_mask.align" \
-	"$round2/$species_name.BovB_mask.align" \
-	"$round3/$species_name.Tetrapoda_mask.align" \
-	"$round4/$species_name.19snake_known_mask.align" \
-	"$round5/$species_name.19snake_unknown_mask.align" \
-	> "$round6/$species_name.Full_Mask.align"
+	# Combine RepeatMasker repeat alignments for all repeats - .align
+	echo -e "\e[31mConcatenating .align outputs...\e[0m"
+	cat "$round1/$species_name.simple_mask.align" \
+		"$round2/$species_name.BovB_mask.align" \
+		"$round3/$species_name.Tetrapoda_mask.align" \
+		"$round4/$species_name.19snake_known_mask.align" \
+		"$round5/$species_name.19snake_unknown_mask.align" \
+		> "$round6/$species_name.Full_Mask.align"
 
-# Resummarize repeat compositions from combined analysis of all RepeatMasker rounds
-echo -e "\e[31mProcessing repeats...\e[0m"
-ProcessRepeats \
-	-species tetrapoda \
-	"$round6/$species_name.Full_Mask.cat.gz"
+	# Resummarize repeat compositions from combined analysis of all RepeatMasker rounds
+	echo -e "\e[31mProcessing repeats...\e[0m"
+	ProcessRepeats \
+		-species tetrapoda \
+		"$round6/$species_name.Full_Mask.cat.gz"
+fi
+
 
 # Create repeat landscape files
 echo -e "\e[31mCreating repeat landscape files...\e[0m"
 # Convert the reference genome to .2bit
 faToTwoBit "$reference_genome" "$reference_genome_extra_dir/$species_name.2bit"
 # Calculate divergence
-# QUESTION: Figure out what that even means
 calcDivergenceFromAlign.pl -s "$round6/$species_name.Full_Mask.landscape" "$round6/$species_name.Full_Mask.align"
 # Create repeat landscape
-# QUESTION: Figure out what that means too
 createRepeatLandscape.pl -div "$round6/$species_name.Full_Mask.landscape" \
 	-twoBit "$reference_genome_extra_dir/$species_name.2bit" \
 	> "$round6/$species_name.Full_Mask.landscape.html"

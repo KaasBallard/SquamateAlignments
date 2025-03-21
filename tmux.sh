@@ -14,7 +14,7 @@ tmux has-session -t "$session" 2>/dev/null
 # $? returns 0 if the session exists, so create it if it doesn't
 if [ $? != 0 ]; then
 	# Change the directory to the current project directory
-	cd "$project_dir"
+	cd "$project_dir" || exit
 
 	# Create a new session
 	tmux new-session -d -s "$session" -n main  # The dash -d flag is used to prevent the tmux session from immediately attaching to the terminal
