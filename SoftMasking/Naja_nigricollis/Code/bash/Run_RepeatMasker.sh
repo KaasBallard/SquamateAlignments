@@ -77,6 +77,30 @@ check_round2() {
 	find "$round_dir" -maxdepth 1 \( -name "*.fasta.masked" -o -name "*.fasta.align" -o -name "*.fasta.cat.gz" -o -name "*.fasta.out" -o -name "*.fasta.tbl" \) | grep -q .
 }
 
+# Function to check for required commands
+check_requirements() {
+	local missing_tools=()
+	for cmd in RepeatMasker faToTwoBit twoBitInfo calcDivergenceFromAlign.pl createRepeatLandscape.pl rmOutToGFF3.pl seqkit bedtools; do
+		if ! command -v "$cmd" &> /dev/null; then
+			missing_tools+=("$cmd")
+		fi
+	done
+
+	if [ ${#missing_tools[@]} -ne 0 ]; then
+		echo "Error: The following required tools are missing:"
+		for tool in "${missing_tools[@]}"; do
+			echo "  - $tool"
+		done
+		echo "Please install these tools before running this script."
+		exit 1
+	fi
+}
+
+# Call this function to check for required commands
+check_requirements
+
+
+
 # Trap errors and report the line number
 trap 'error_exit $LINENO' ERR
 
@@ -374,7 +398,18 @@ if [ ! -f "$round6/$species_name.Full_Mask.landscape.html" ]; then
 		-twoBit "$reference_genome_extra_dir/$species_name.2bit" \
 		> "$round6/$species_name.Full_Mask.landscape.html"
 else
-	echo -e "\e[31mRepeat landscape already created. Skipping.\e[0m"
+	echo -e "\e[31mRepeat landscape already created. Checking if it has any data...\e[0m"
+	# Check if the landscape file has data in it or not
+	if ! grep -q "<svg" "$round6/$species_name.Full_Mask.landscape.html" || ! grep -q "RepeatLandscape" "$round6/$species_name.Full_Mask.landscape.html"; then
+		echo "Warning: The landscape HTML file was created but appears to be empty or missing expected content. Recreating..."
+
+		# Recreate the landscape file
+		createRepeatLandscape.pl -div "$round6/$species_name.Full_Mask.landscape" \
+			-twoBit "$reference_genome_extra_dir/$species_name.2bit" \
+			> "$round6/$species_name.Full_Mask.landscape.html"
+	else
+		echo "Repeat landscape HTML file created successfully with content."
+	fi
 fi
 
 # Create GFFs
@@ -385,6 +420,7 @@ else
 	echo -e "\e[31mGFF3 already created. Skipping.\e[0m"
 fi
 
+# Reformat GFF3
 if [ ! -f "$round6/$species_name.Full_Mask.reformat.gff3" ]; then
 	echo -e "\e[31mReformatting GFF3 (Daren Card method)...\e[0m"
 	cat "$round6/$species_name.Full_Mask.gff3" \
