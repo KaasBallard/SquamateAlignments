@@ -24,7 +24,7 @@ output_directory="/home/administrator/ExtraSSD2/Kaas/Projects/SquamateAlignments
 database_name="Naja_nigricollis"
 
 # Reference genome
-reference_genome="/home/administrator/ExtraSSD2/Kaas/Projects/SquamateAlignments/Reference_Genomes/from_Sekar/_completeAssemblies/Naja_nigricollis_najNig1/Assembly/najNig2.ragtag.scaffold_naNa.REHEADER.MT.fasta"
+reference_genome="$HOME/ExtraSSD2/Kaas/Projects/SquamateAlignments/Reference_Genomes/Sekar_Genomes/Scaffold_Assemblies/Elapidae/Naja/Naja_nigricollis_najNig1/Assembly/najNig2.ragtag.scaffold_naNa.REHEADER.MT.fasta"
 
 # Step #1: Build a new RepeatModeler database for the reference genome
 # Note: BuildDatabase can build directories that don't exist yet

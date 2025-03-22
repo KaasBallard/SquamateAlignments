@@ -12,10 +12,10 @@ https://darencard.net/blog/2022-07-09-genome-repeat-annotation/
 ScriptDescription
 
 # Reference genome
-reference_genome="$HOME/ExtraSSD2/Kaas/Projects/SquamateAlignments/Reference_Genomes/from_Sekar/_completeAssemblies/Naja_nigricollis_najNig1/Assembly/najNig2.ragtag.scaffold_naNa.REHEADER.MT.fasta"
+reference_genome="$HOME/ExtraSSD2/Kaas/Projects/SquamateAlignments/Reference_Genomes/Sekar_Genomes/Scaffold_Assemblies/Elapidae/Naja/Naja_nigricollis_najNig1/Assembly/najNig2.ragtag.scaffold_naNa.REHEADER.MT.fasta"
 
 # Set a directory for the genomic files create by this script
-reference_genome_extra_dir="$HOME/ExtraSSD2/Kaas/Projects/SquamateAlignments/Reference_Genomes/from_Sekar/_completeAssemblies/Naja_nigricollis_najNig1/Assembly/FromRepeatMaskerProcess"
+reference_genome_extra_dir="$HOME/ExtraSSD2/Kaas/Projects/SquamateAlignments/Reference_Genomes/Sekar_Genomes/Scaffold_Assemblies/Elapidae/Naja/Naja_nigricollis_najNig1/Assembly/FromRepeatMaskerProcess"
 
 # Make the above directory if it does not exist
 [ ! -d "$reference_genome_extra_dir" ] && mkdir -p "$reference_genome_extra_dir"
@@ -352,23 +352,47 @@ fi
 # Create repeat landscape files
 echo -e "\e[31mCreating repeat landscape files...\e[0m"
 # Convert the reference genome to .2bit
-faToTwoBit "$reference_genome" "$reference_genome_extra_dir/$species_name.2bit"
+if [ ! -f "$reference_genome_extra_dir/$species_name.2bit" ]; then
+	echo -e "\e[31mConverting reference genome to .2bit format...\e[0m"
+	faToTwoBit "$reference_genome" "$reference_genome_extra_dir/$species_name.2bit"
+else
+	echo -e "\e[31mReference genome already in .2bit format. Skipping.\e[0m"
+fi
+
 # Calculate divergence
-calcDivergenceFromAlign.pl -s "$round6/$species_name.Full_Mask.landscape" "$round6/$species_name.Full_Mask.align"
+if [ ! -f "$round6/$species_name.Full_Mask.landscape" ]; then
+	echo -e "\e[31mCalculating divergence...\e[0m"
+	calcDivergenceFromAlign.pl -s "$round6/$species_name.Full_Mask.landscape" "$round6/$species_name.Full_Mask.align"
+else
+	echo -e "\e[31mDivergence already calculated. Skipping.\e[0m"
+fi
+
 # Create repeat landscape
-createRepeatLandscape.pl -div "$round6/$species_name.Full_Mask.landscape" \
-	-twoBit "$reference_genome_extra_dir/$species_name.2bit" \
-	> "$round6/$species_name.Full_Mask.landscape.html"
+if [ ! -f "$round6/$species_name.Full_Mask.landscape.html" ]; then
+	echo -e "\e[31mCreating repeat landscape...\e[0m"
+	createRepeatLandscape.pl -div "$round6/$species_name.Full_Mask.landscape" \
+		-twoBit "$reference_genome_extra_dir/$species_name.2bit" \
+		> "$round6/$species_name.Full_Mask.landscape.html"
+else
+	echo -e "\e[31mRepeat landscape already created. Skipping.\e[0m"
+fi
 
 # Create GFFs
-echo -e "\e[31mCreating GFF3...\e[0m"
-rmOutToGFF3.pl "$round6/$species_name.Full_Mask.out" > "$round6/$species_name.Full_Mask.gff3"
+if [ ! -f "$round6/$species_name.Full_Mask.gff3" ]; then
+	echo -e "\e[31mCreating GFF3...\e[0m"
+	rmOutToGFF3.pl "$round6/$species_name.Full_Mask.out" > "$round6/$species_name.Full_Mask.gff3"
+else
+	echo -e "\e[31mGFF3 already created. Skipping.\e[0m"
+fi
 
-# TODO: Figure out what the fuck this does
-echo -e "\e[31mReformatting GFF3 (Daren Card method)...\e[0m"
-cat "$round6/$species_name.Full_Mask.gff3" \
-| perl -ane '$id; if(!/^\#/){@F = split(/\t/, $_); chomp $F[-1];$id++; $F[-1] .= "\;ID=$id"; $_ = join("\t", @F)."\n"} print $_' \
-> "$round6/$species_name.Full_Mask.reformat.gff3"
+if [ ! -f "$round6/$species_name.Full_Mask.reformat.gff3" ]; then
+	echo -e "\e[31mReformatting GFF3 (Daren Card method)...\e[0m"
+	cat "$round6/$species_name.Full_Mask.gff3" \
+	| perl -ane '$id; if(!/^\#/){@F = split(/\t/, $_); chomp $F[-1];$id++; $F[-1] .= "\;ID=$id"; $_ = join("\t", @F)."\n"} print $_' \
+	> "$round6/$species_name.Full_Mask.reformat.gff3"
+else
+	echo -e "\e[31mGFF3 already reformatted. Skipping.\e[0m"
+fi
 
 # Beggin soft-masking the genome
 echo -e "\e[31mSoft masking the reference genome...\e[0m"
