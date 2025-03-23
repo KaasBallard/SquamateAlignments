@@ -447,8 +447,10 @@ seqkit locate \
 	--bed \
 	-rPp "N+" "$reference_genome" \
 	> original_N_coords.bed
+	# The above file are the N's from scaffolding, they are not hard masked
 # Merge the book end/overlapping features into a bed file, which come from the temporary bedfile above
 bedtools merge -i original_N_coords.bed > consolidated_original_N_coords.bed
+# This makes the features into one line
 
 # Take the hard mask genome and find all of the hard masked features where Ns are
 seqkit locate \
@@ -459,11 +461,13 @@ bedtools merge -i masked_N_coords.bed > consolidated_masked_N_coords.bed
 
 # Subtract the features in the original genome from those in the masked genome to get features found only in the masked genome
 bedtools subtract -a consolidated_masked_N_coords.bed -b consolidated_original_N_coords.bed > consolidated_new_masked_N_coords.bed
+# bedtools subtract the hard masked N's plus scaffolding N's and subtract the scaffolding N's from the hard masked N's, leaving only the hard masked N's
 
 # Take the soft masked genome from the first round and create a bed file of those features
 seqkit locate \
 	--bed -rPp "[acgtryswkmbdhvn]+" "$round1_genome" \
 	> soft_masked_coords.bed
+	# This locates the soft masked features from the first round of masking
 # Merge the soft maskeed overlapping features
 bedtools merge -i soft_masked_coords.bed > consolidated_soft_masked_coords.bed
 
