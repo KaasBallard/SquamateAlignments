@@ -11,6 +11,7 @@ The aforementioned blog post can be found here:
 https://darencard.net/blog/2022-07-09-genome-repeat-annotation/
 ScriptDescription
 
+# ====================  SETUP ==================== 
 # Reference genome
 reference_genome="$HOME/ExtraSSD2/Kaas/Projects/SquamateAlignments/Reference_Genomes/Sekar_Genomes/Scaffold_Assemblies/Elapidae/Naja/Naja_nigricollis_najNig1/Assembly/najNig2.ragtag.scaffold_naNa.REHEADER.MT.fasta"
 
@@ -36,17 +37,8 @@ repeat_masker_dir="$HOME/ExtraSSD2/Kaas/Projects/SquamateAlignments/SoftMasking/
 log_file="$repeat_masker_dir/Logs/RepeatMasker_run_$(date '+%Y%m%d_%H%M%S').log"
 exec > >(tee -a "$log_file") 2>&1
 
-# Activate the mamba environment before doing anything else
-echo "Activating mamba environment: RepeatMaskAnnot"
-source /home/administrator/mambaforge/bin/activate RepeatMaskAnnot
-
-# Check if the mamba environment is active
-if [[ -z "$CONDA_DEFAULT_ENV" ]]; then
-	echo "No mamba environment is active. Exiting."
-	exit 1
-else
-	echo "Mamba environment active: $CONDA_DEFAULT_ENV"
-fi
+# Add the FindRegionCoordinates program to the PATH
+export PATH="$HOME/ExtraSSD2/Kaas/Projects/FindRegionCoordinates:$PATH"
 
 # Change the directory to the RepeatMasker directory if it isn't there already
 cd "$repeat_masker_dir" || exit 1
@@ -57,6 +49,7 @@ echo "Current working directory: $(pwd)"
 # Exit immediately if a command exits with a non-zero status
 set -e
 
+# ==================== FUNCTIONS ====================
 # Function to report error
 error_exit() {
     echo "Error occurred in script at line: $1"
@@ -96,10 +89,39 @@ check_requirements() {
 	fi
 }
 
+# Function to activate the correct environment once
+activate_environment() {
+    local env_name="$1"
+    echo "Activating environment: $env_name"
+    
+    if [[ "$env_name" == "RepeatMaskAnnot" ]]; then
+        source /home/administrator/mambaforge/bin/activate RepeatMaskAnnot
+    elif [[ "$env_name" == "FindRegionCoordinates" ]]; then
+        source "$HOME/ExtraSSD2/Kaas/Projects/FindRegionCoordinates/.venv/bin/activate"
+    else
+        echo "Unknown environment: $env_name"
+        return 1
+    fi
+    
+    # Verify environment activation
+    if [[ "$env_name" == "RepeatMaskAnnot" && -z "$CONDA_DEFAULT_ENV" ]]; then
+        echo "Failed to activate $env_name environment. Exiting."
+        exit 1
+    fi
+    
+    echo "Environment active: $env_name"
+    return 0
+}
+
+
+
+
+# ==================== MAKE REPEAT MASKER ROUNDS ====================
+# Activate the mamba environment
+activate_environment "RepeatMaskAnnot"
+
 # Call this function to check for required commands
 check_requirements
-
-
 
 # Trap errors and report the line number
 trap 'error_exit $LINENO' ERR
@@ -124,7 +146,7 @@ done
 # Set the number of threads for RepeatMasker -pa to use
 t=40
 
-
+# ==================== REPEAT MASKER ROUND 1 ====================
 # Round 1: SSR masking
 # Run simple sequence repeat (SSR) masking
 # Note that Daren likes to do this first as it sames time to mask all of the simple repeats, 
@@ -159,6 +181,7 @@ else
 fi
 
 
+# ==================== REPEAT MASKER ROUND 2 ====================
 
 # Set the repeat elements library for round 2
 bovb_cr1="$HOME/ExtraSSD2/Kaas/Projects/SquamateAlignments/SoftMasking/known_repeat_elements/CR1_BovB_Squamates_TElib.fasta"
@@ -199,6 +222,7 @@ fi
 
 
 
+# ==================== REPEAT MASKER ROUND 3 ====================
 # Find the output file from Round 1
 round2_genome=$(find "$round2" -type f -name "*.BovB_mask.fasta" | head -n 1)
 
@@ -235,6 +259,7 @@ else
 fi
 
 
+# ==================== REPEAT MASKER ROUND 4 ====================
 # Round 4: "19snake" known masking
 # Find the FASTA from round 3
 round3_genome=$(find "$round3" -type f -name "*.Tetrapoda_mask.fasta" | head -n 1)
@@ -281,6 +306,7 @@ else
 fi
 
 
+# ==================== REPEAT MASKER ROUND 5 ====================
 # Round 5: 05_19 Snake unknown masking
 # Find the FASTA file from round 4
 round4_genome=$(find "$round4" -type f -name "*.19snake_known_mask.fasta" | head -n 1)
@@ -327,7 +353,8 @@ else
 fi
 
 
-# Find the FASTA file from round 4
+# ==================== REPEAT MASKER ROUND 6 ====================
+# Find the FASTA file from round 5
 round5_genome=$(find "$round5" -type f -name "*.19snake_unknown_mask.fasta" | head -n 1)
 
 if check_round "$round6"; then
@@ -373,6 +400,7 @@ else
 fi
 
 
+# ==================== POST-PROCESSING ====================
 # Create repeat landscape files
 echo -e "\e[31mCreating repeat landscape files...\e[0m"
 # Convert the reference genome to .2bit
@@ -430,57 +458,93 @@ else
 	echo -e "\e[31mGFF3 already reformatted. Skipping.\e[0m"
 fi
 
+# ==================== SOFT MASKING ====================
 # Beggin soft-masking the genome
 echo -e "\e[31mSoft masking the reference genome...\e[0m"
 
-# Find original Ns (come from scaffolding of the original pre-masked genome) and then find all Ns in the hard-masked genome
-# Remove original Ns from the all N list
-# Add to this the regions that were soft-masked in step 1
-# Combine these sets of coordinates to get all masked regions and soft mask them
+# Activate the virtual environment
+activate_environment "FindRegionCoordinates"
 
-# TODO: Fix this to make it faster
-# OPTIMIZE: This is slow as shit apparently
-# seqkit takes extremely long and should be optimized
+# Set path for the soft masked BED files
+masked_coords_dir="Masked_Coordinates"
 
-# Take the reference genome and find all the hard masked features where Ns are
-seqkit locate \
-	--bed \
-	-rPp "N+" "$reference_genome" \
-	> original_N_coords.bed
-	# The above file are the N's from scaffolding, they are not hard masked
-# Merge the book end/overlapping features into a bed file, which come from the temporary bedfile above
-bedtools merge -i original_N_coords.bed > consolidated_original_N_coords.bed
-# This makes the features into one line
+# Make a directory for the BED files
+[ ! -d "$masked_coords_dir" ] && mkdir -p "$masked_coords_dir"
 
-# Take the hard mask genome and find all of the hard masked features where Ns are
-seqkit locate \
-	--bed -rPp "N+" "$round6/$species_name.complex_hard-mask.masked.fasta" \
-	> masked_N_coords.bed
-# Merge the overlapping features into a single bed file
-bedtools merge -i masked_N_coords.bed > consolidated_masked_N_coords.bed
+# Set the hard masked coordinates file name
+original_hard_masked_coords_bed="$masked_coords_dir/$species_abbreviation.original_hard_masked_coordinates.bed"
+
+# Find all of the hard masked features already in the genome from assembly
+if [ -f "$original_hard_masked_coords_bed" ]; then
+	echo -e "\e[31mHard masked coordinates file already exists. Skipping..\e[0m"
+else
+	echo -e "\e[31mHard masked coordinates file does not exist. Creating...\e[0m"
+	# Take the reference genome and find all the hard masked features where Ns are
+	python FindRegionCoordinates \
+		-f "$reference_genome" \
+		-b "$original_hard_masked_coords_bed"
+fi
+
+
+# Set the hard masked coordinates file name for round 6
+new_hard_masked_coords_bed="$masked_coords_dir/$species_abbreviation.new_hard_masked_coordinates.bed"
+
+# Find all of the hard masked features found in the genome at round 6
+if [ -f "$new_hard_masked_coords_bed" ]; then
+	echo -e "\e[31mHard masked coordinates file already exists. Skipping..\e[0m"
+else
+	echo -e "\e[31mHard masked coordinates file does not exist. Creating...\e[0m"
+	# Take the hard masked genome from round 6 and find all the hard masked features where Ns are
+	python FindRegionCoordinates \
+		-f "$round6/$species_name.complex_hard-mask.masked.fasta" \
+		-b "$new_hard_masked_coords_bed"
+fi
+
+
+
+# Activate the mamba environment
+activate_environment "RepeatMaskAnnot"
+
+# Set the hard masked coordinates file name
+new_minus_original_coords_bed="$masked_coords_dir/$species_abbreviation.new_minus_original_coordinates.bed"
 
 # Subtract the features in the original genome from those in the masked genome to get features found only in the masked genome
-bedtools subtract -a consolidated_masked_N_coords.bed -b consolidated_original_N_coords.bed > consolidated_new_masked_N_coords.bed
+bedtools subtract -a "$new_hard_masked_coords_bed" -b "$original_hard_masked_coords_bed" > "$new_minus_original_coords_bed"
 # bedtools subtract the hard masked N's plus scaffolding N's and subtract the scaffolding N's from the hard masked N's, leaving only the hard masked N's
 
-# Take the soft masked genome from the first round and create a bed file of those features
-seqkit locate \
-	--bed -rPp "[acgtryswkmbdhvn]+" "$round1_genome" \
-	> soft_masked_coords.bed
-	# This locates the soft masked features from the first round of masking
-# Merge the soft maskeed overlapping features
-bedtools merge -i soft_masked_coords.bed > consolidated_soft_masked_coords.bed
 
-# Concatenate the masked files together
-cat consolidated_new_masked_N_coords.bed consolidated_soft_masked_coords.bed | sort -k1,1 -k2,2n > all_masked_coords.bed
+# Activate the virtual environment
+activate_environment "FindRegionCoordinates"
+
+# Set the soft masked coordinates file name
+soft_masked_coords_bed="$masked_coords_dir/$species_abbreviation.soft_masked_coordinates.bed"
+
+# Find all of the soft masked features foun in the genome at round 1
+if [ -f "$soft_masked_coords_bed" ]; then
+	echo -e "\e[31mSoft masked coordinates file already exists. Skipping..\e[0m"
+else
+	echo -e "\e[31mSoft masked coordinates file does not exist. Creating...\e[0m"
+	# Take the soft masked genome from the first round and create a bed file of those features
+	python FindRegionCoordinates \
+		-f "$round1_genome" \
+		-r "[acgtryswkmbdhvn]+" \
+		-b "$soft_masked_coords_bed"
+fi
+
+# Set the all masked coordinates file name
+all_masked_coords_bed="$masked_coords_dir/$species_abbreviation.all_masked_coordinates.bed"
+
+# Concatenate the masked files togther
+cat "$new_minus_original_coords_bed" "$soft_masked_coords_bed" | sort -k1,1 -k2,2n > "$all_masked_coords_bed"
+
+# Activate the mamba environment
+activate_environment "RepeatMaskAnnot"
+
 
 # Soft mask the reference genome from the coordinates here
 bedtools maskfasta -soft -fi "$reference_genome" \
-	-bed all_masked_coords.bed \
+	-bed "$all_masked_coords_bed" \
 	-fo "$round6/$species_name.Full_Mask.soft.fasta"
-
-# Remove the temporary bed files
-rm *.bed
 
 # Compress the outputs to save space
 echo -e "\e[31mCompressing outputs...\e[0m"
