@@ -28,7 +28,7 @@ species_name=$(basename "$reference_genome" .fasta)
 species_abbreviation="najNig2"
 
 # Set the RepeatMasker directory
-repeat_masker_dir="$HOME/ExtraSSD2/Kaas/Projects/SquamateAlignments/SoftMasking/Naja_nigricollis/Results/2_RepeatMasker"
+repeat_masker_dir="$HOME/ExtraSSD2/Kaas/Projects/SquamateAlignments/SoftMasking/Naja_nigricollis/Results/2_RepeatMasker2"
 
 # Make the logs directory if it doesn't exist
 [ ! -d "$repeat_masker_dir/Logs" ] && mkdir -p "$repeat_masker_dir/Logs"
@@ -539,7 +539,6 @@ cat "$new_minus_original_coords_bed" "$soft_masked_coords_bed" | sort -k1,1 -k2,
 
 # Activate the mamba environment
 activate_environment "RepeatMaskAnnot"
-
 
 # Soft mask the reference genome from the coordinates here
 bedtools maskfasta -soft -fi "$reference_genome" \
