@@ -105,11 +105,11 @@ activate_environment() {
     
     # Verify environment activation
     if [[ "$env_name" == "RepeatMaskAnnot" && -z "$CONDA_DEFAULT_ENV" ]]; then
-        echo "Failed to activate $env_name environment. Exiting."
+        echo "Failed to activate $CONDA_DEFAULT_ENV environment. Exiting."
         exit 1
     fi
     
-    echo "Environment active: $env_name"
+    echo "Environment active: $CONDA_DEFAULT_ENV"
     return 0
 }
 
