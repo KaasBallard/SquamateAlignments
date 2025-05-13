@@ -172,7 +172,7 @@ else
 	rename 's/.masked$/.fasta/g' "$round1"/*
 
 	# Check if the files were created, exit otherwise
-	if check_round2 "$round1"; then
+	if check_round "$round1"; then
 		echo "Files found for $round1. Continuing to the next round."
 	else
 		echo "Error: Files for $round1 were not created."
@@ -212,7 +212,7 @@ else
 	rename 's/.masked$/.fasta/g' "$round2"/*
 
 	# Check if the files were created, exit otherwise
-	if check_round2 "$round2"; then
+	if check_round "$round2"; then
 		echo "Files found for $round2. Continuing to the next round."
 	else
 		echo "Error: Files for $round2 were not created."
@@ -250,7 +250,7 @@ else
 
 
 	# Check if the files were created, exit otherwise
-	if check_round2 "$round3"; then
+	if check_round "$round3"; then
 		echo "Files found for $round3. Continuing to the next round."
 	else
 		echo "Error: Files for $round3 were not created."
@@ -297,7 +297,7 @@ else
 
 
 	# Check if the files were created, exit otherwise
-	if check_round2 "$round4"; then
+	if check_round "$round4"; then
 		echo "Files found for $round4. Continuing to the next round."
 	else
 		echo "Error: Files for $round4 were not created."
@@ -344,7 +344,7 @@ else
 
 
 	# Check if the files were created, exit otherwise
-	if check_round2 "$round5"; then
+	if check_round "$round5"; then
 		echo "Files found for $round5. Continuing to the next round."
 	else
 		echo "Error: Files for $round5 were not created."
