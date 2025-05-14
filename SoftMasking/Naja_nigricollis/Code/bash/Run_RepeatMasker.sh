@@ -480,7 +480,7 @@ if [ -f "$original_hard_masked_coords_bed" ]; then
 else
 	echo -e "\e[31mHard masked coordinates file does not exist. Creating...\e[0m"
 	# Take the reference genome and find all the hard masked features where Ns are
-	python FindRegionCoordinates \
+	FindRegionCoordinates.py \
 		-f "$reference_genome" \
 		-b "$original_hard_masked_coords_bed"
 fi
@@ -495,7 +495,7 @@ if [ -f "$new_hard_masked_coords_bed" ]; then
 else
 	echo -e "\e[31mHard masked coordinates file does not exist. Creating...\e[0m"
 	# Take the hard masked genome from round 6 and find all the hard masked features where Ns are
-	python FindRegionCoordinates \
+	FindRegionCoordinates.py \
 		-f "$round6/$species_name.complex_hard-mask.masked.fasta" \
 		-b "$new_hard_masked_coords_bed"
 fi
@@ -525,7 +525,7 @@ if [ -f "$soft_masked_coords_bed" ]; then
 else
 	echo -e "\e[31mSoft masked coordinates file does not exist. Creating...\e[0m"
 	# Take the soft masked genome from the first round and create a bed file of those features
-	python FindRegionCoordinates \
+	FindRegionCoordinates.py \
 		-f "$round1_genome" \
 		-r "[acgtryswkmbdhvn]+" \
 		-b "$soft_masked_coords_bed"
