@@ -28,7 +28,7 @@ species_name=$(basename "$reference_genome" .fasta)
 species_abbreviation="najNig2"
 
 # Set the RepeatMasker directory
-repeat_masker_dir="$HOME/ExtraSSD2/Kaas/Projects/SquamateAlignments/SoftMasking/Naja_nigricollis/Results/2_RepeatMasker2"
+repeat_masker_dir="$HOME/ExtraSSD2/Kaas/Projects/SquamateAlignments/SoftMasking/Naja_nigricollis/Results/2_RepeatMasker"
 
 # Make the logs directory if it doesn't exist
 [ ! -d "$repeat_masker_dir/Logs" ] && mkdir -p "$repeat_masker_dir/Logs"
@@ -519,7 +519,7 @@ activate_environment "FindRegionCoordinates"
 # Set the soft masked coordinates file name
 soft_masked_coords_bed="$masked_coords_dir/$species_abbreviation.soft_masked_coordinates.bed"
 
-# Find all of the soft masked features foun in the genome at round 1
+# Find all of the soft masked features found in the genome at round 1
 if [ -f "$soft_masked_coords_bed" ]; then
 	echo -e "\e[31mSoft masked coordinates file already exists. Skipping..\e[0m"
 else
