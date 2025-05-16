@@ -1,10 +1,10 @@
 # Ignore the Data directories
-SoftMasking/*/Results/
 Reference_Genomes/
 SoftMasking/known_repeat_elements/
+SoftMasking/*/*/Results/
 
 # Ignore any of the RepeatModeler runs
-SoftMasking/*/Code/bash/RM_*/
+SoftMasking/*/*/Results/0_RepeatModeler/
 
 # Ignore R related files
 *.Rhistory
