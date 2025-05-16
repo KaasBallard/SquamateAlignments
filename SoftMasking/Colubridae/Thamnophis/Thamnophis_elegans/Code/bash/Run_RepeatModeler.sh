@@ -1,7 +1,7 @@
 #!/bin/bash
 
 : <<'ScriptDescription'
-Date: 2025/03/11
+Date: 2025/05/16
 
 This script is designed to run RepeatModeler. I am following the method found in Daren Card's blog post:
 https://darencard.net/blog/2022-07-09-genome-repeat-annotation/
@@ -12,19 +12,19 @@ ScriptDescription
 source /home/administrator/mambaforge/bin/activate RepeatMaskAnnot
 
 # Set the number of threads for RepeatModeler
-threads=40
+threads=44
 
 # Set the output directory
-output_directory="/home/administrator/ExtraSSD2/Kaas/Projects/SquamateAlignments/SoftMasking/Naja_nigricollis/Results/0_RepeatModeller"
+output_directory="/home/administrator/ExtraSSD2/Kaas/Projects/SquamateAlignments/SoftMasking/Colubridae/Thamnophis/Thamnophis_elegans/Results/0_RepeatModeler"
 
 # Create log directory under the output directory if it does not exist
 [ ! -d "$output_directory/Logs" ] && mkdir -p "$output_directory/Logs"
 
 # Set the name for the RepeatModeler database
-database_name="Naja_nigricollis"
+database_name="Thamnophis_elegans"
 
 # Reference genome
-reference_genome="$HOME/ExtraSSD2/Kaas/Projects/SquamateAlignments/Reference_Genomes/Sekar_Genomes/Scaffold_Assemblies/Elapidae/Naja/Naja_nigricollis_najNig1/Assembly/najNig2.ragtag.scaffold_naNa.REHEADER.MT.fasta"
+reference_genome="$HOME/ExtraSSD2/Kaas/Projects/SquamateAlignments/Reference_Genomes/Public_Genomes/Colubridae/Thamnophis/Thamnophis_elegans/ncbi_dataset/data/GCA_009769695.1/GCA_009769695.1_rThaEle1.alt_genomic.fna"
 
 # Step #1: Build a new RepeatModeler database for the reference genome
 # Note: BuildDatabase can build directories that don't exist yet
