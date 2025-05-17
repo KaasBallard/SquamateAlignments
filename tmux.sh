@@ -2,8 +2,8 @@
 
 # This script is used to start or attach to a tmux session for the SquamateAlignments project
 
-# Project directory
-project_dir="$HOME/ExtraSSD2/Kaas/Projects/SquamateAlignments"
+# Resolve the directory where this script is located
+project_dir="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 
 # Set the session name
 session="SquamateAlignments"
