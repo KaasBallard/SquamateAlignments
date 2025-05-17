@@ -9,13 +9,13 @@ https://darencard.net/blog/2022-07-09-genome-repeat-annotation/
 ScriptDescription
 
 # Activate the mamba environment containing RepeatModeler
-source /home/administrator/mambaforge/bin/activate RepeatMaskAnnot
+source "$HOME/mambaforge/bin/activate" RepeatMaskAnnot
 
 # Set the number of threads for RepeatModeler
 threads=44
 
 # Set the output directory
-output_directory="/home/administrator/ExtraSSD2/Kaas/Projects/SquamateAlignments/SoftMasking/Colubridae/Thamnophis/Thamnophis_elegans/Results/0_RepeatModeler"
+output_directory="$HOME/ExtraSSD2/Kaas/Projects/SquamateAlignments/SoftMasking/Colubridae/Thamnophis/Thamnophis_elegans/Results/0_RepeatModeler"
 
 # Create log directory under the output directory if it does not exist
 [ ! -d "$output_directory/Logs" ] && mkdir -p "$output_directory/Logs"
