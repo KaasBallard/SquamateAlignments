@@ -14,11 +14,11 @@ ScriptDescription
 # ====================  SETUP ====================
 # NOTE: Change this when needed
 # Reference genome
-reference_genome="$HOME/ExtraSSD2/Kaas/Projects/SquamateAlignments/Reference_Genomes/Public_Genomes/Colubridae/Thamnophis/Thamnophis_elegans/ncbi_dataset/data/GCA_009769695.1/GCA_009769695.1_rThaEle1.alt_genomic.fna"
+reference_genome="$HOME/Documents/Kaas/SquamateAlignments/Reference_Genomes/Public_Genomes/Viperidae/Vipera/Vipera_latastei/ncbi_dataset/data/GCA_024294585.1/GCA_024294585.1_rVipLat1.pri_genomic.fna"
 
 # NOTE: Change this when needed
 # Set a directory for the genomic files create by this script
-reference_genome_extra_dir="$HOME/ExtraSSD2/Kaas/Projects/SquamateAlignments/Reference_Genomes/Public_Genomes/Colubridae/Thamnophis/Thamnophis_elegans/FromRepeatMaskerProcess"
+reference_genome_extra_dir="$HOME/Documents/Kaas/SquamateAlignments/Reference_Genomes/Public_Genomes/Viperidae/Vipera/Vipera_latastei/FromRepeatMaskerProcess"
 
 # Make the above directory if it does not exist
 [ ! -d "$reference_genome_extra_dir" ] && mkdir -p "$reference_genome_extra_dir"
@@ -28,11 +28,11 @@ species_name=$(basename "$reference_genome" .fasta)
 
 # NOTE: Change this when needed
 # Species name abreviation
-species_abbreviation="ThaEle1"
+species_abbreviation="vipLat1"
 
 # NOTE: Change this when needed
 # Set the RepeatMasker directory
-repeat_masker_dir="$HOME/ExtraSSD2/Kaas/Projects/SquamateAlignments/SoftMasking/Colubridae/Thamnophis/Thamnophis_elegans/Results/2_RepeatMasker"
+repeat_masker_dir="$HOME/Documents/Kaas/SquamateAlignments/SoftMasking/Viperidae/Vipera/Vipera_latastei/Results/2_RepeatMasker"
 
 # Make the logs directory if it doesn't exist
 [ ! -d "$repeat_masker_dir/Logs" ] && mkdir -p "$repeat_masker_dir/Logs"
@@ -43,7 +43,7 @@ exec > >(tee -a "$log_file") 2>&1
 
 # NOTE: Change this when needed
 # Add the FindRegionCoordinates program to the PATH
-export PATH="$HOME/ExtraSSD2/Kaas/Projects/FindRegionCoordinates:$PATH"
+export PATH="$HOME/Documents/Kaas/FindRegionCoordinates:$PATH"
 
 # Change the directory to the RepeatMasker directory if it isn't there already
 cd "$repeat_masker_dir" || exit 1
@@ -78,7 +78,7 @@ check_round2() {
 # Function to check for required commands
 check_requirements() {
 	local missing_tools=()
-	for cmd in RepeatMasker faToTwoBit twoBitInfo calcDivergenceFromAlign.pl createRepeatLandscape.pl rmOutToGFF3.pl seqkit bedtools; do
+	for cmd in RepeatMasker faToTwoBit twoBitInfo calcDivergenceFromAlign.pl createRepeatLandscape.pl rmOutToGFF3.pl bedtools; do
 		if ! command -v "$cmd" &> /dev/null; then
 			missing_tools+=("$cmd")
 		fi
@@ -101,9 +101,9 @@ activate_environment() {
     echo "Activating environment: $env_name"
     
     if [[ "$env_name" == "RepeatMaskAnnot" ]]; then
-        source /home/administrator/mambaforge/bin/activate RepeatMaskAnnot
+        source /home/administrator/miniforge3/bin/activate RepeatMaskAnnot
     elif [[ "$env_name" == "FindRegionCoordinates" ]]; then
-        source "$HOME/ExtraSSD2/Kaas/Projects/FindRegionCoordinates/.venv/bin/activate"
+        source "$HOME/Documents/Kaas/FindRegionCoordinates/.venv/bin/activate"
     else
         echo "Unknown environment: $env_name"
         return 1
@@ -151,7 +151,7 @@ done
 
 # NOTE: Change this when needed
 # Set the number of threads for RepeatMasker -pa to use
-t=40
+t=30
 
 # ==================== REPEAT MASKER ROUND 1 ====================
 # Round 1: SSR masking
@@ -192,7 +192,7 @@ fi
 
 # NOTE: Change this when needed
 # Set the repeat elements library for round 2
-bovb_cr1="$HOME/ExtraSSD2/Kaas/Projects/SquamateAlignments/SoftMasking/known_repeat_elements/CR1_BovB_Squamates_TElib.fasta"
+bovb_cr1="$HOME/Documents/Kaas/SquamateAlignments/SoftMasking/known_repeat_elements/known_repeat_elements/CR1_BovB_Squamates_TElib.fasta"
 
 # Find the output file from Round 1
 round1_genome=$(find "$round1" -type f -name "*.simple_mask.fasta" | head -n 1)
@@ -277,7 +277,7 @@ known_library="../1_Repclassifier/round-10_Self/round-10_Self.known"
 
 # NOTE: Change these when needed
 # Define the custom known file for round 6 that Todd made containing 18 snake repeat elements
-custom_18snake_known_repeats="$HOME/ExtraSSD2/Kaas/Projects/SquamateAlignments/SoftMasking/known_repeat_elements/18Snakes.Known.clust.fasta"
+custom_18snake_known_repeats="$HOME/Documents/Kaas/SquamateAlignments/SoftMasking/known_repeat_elements/18Snakes.Known.clust.fasta"
 # Set the new file path
 new_known_19snakes_library="../1_Repclassifier/round-10_Self/19Snakes_with_$species_abbreviation.Known.clust.fasta"
 
@@ -323,10 +323,10 @@ round4_genome=$(find "$round4" -type f -name "*.19snake_known_mask.fasta" | head
 
 # Set path for the 10th round of repclassifier
 unknown_library="../1_Repclassifier/round-10_Self/round-10_Self.unknown"
-# Define the custom known file for round 6 that Todd made containing 18 snake repeat elements
 
 # NOTE: Change these when needed
-custom_18snake_unknown_repeats="$HOME/ExtraSSD2/Kaas/Projects/SquamateAlignments/SoftMasking/known_repeat_elements/18Snakes.Unknown.clust.fasta"
+# Define the custom known file for round 6 that Todd made containing 18 snake repeat elements
+custom_18snake_unknown_repeats="$HOME/Documents/Kaas/SquamateAlignments/SoftMasking/known_repeat_elements/known_repeat_elements/18Snakes.Unknown.clust.fasta"
 # Set the new file path
 new_unknown_19snakes_library="../1_Repclassifier/round-10_Self/19Snakes_with_$species_abbreviation.Unknown.clust.fasta"
 
