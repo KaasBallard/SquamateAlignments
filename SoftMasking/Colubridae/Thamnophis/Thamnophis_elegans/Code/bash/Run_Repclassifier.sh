@@ -1,6 +1,6 @@
 #!/bin/bash
 : <<'ScriptDescription'
-Date: 2025/03/11
+Date: 2025/06/02
 This script is designed to repclassifier, which is a piece of softwart that uses Repbase database and RepeatMasker to try and identify unknown elements with sequence similarity to curated repeat elements in Repbase.
 It has another mode that can uses a custom library, in the form of a fasta file. This script will use both modes.
 The program can be found here:
@@ -10,12 +10,13 @@ The blog that explains the program can be found here:
 https://darencard.net/blog/2022-07-09-genome-repeat-annotation/
 ScriptDescription
 
-
+# NOTE: Change this each time you run the script
 # Set the RepeatModeler directory
-repeat_modeler_dir="/home/administrator/ExtraSSD2/Kaas/Projects/SquamateAlignments/SoftMasking/Naja_nigricollis/Results/0_RepeatModeller"
+repeat_modeler_dir="$HOME/ExtraSSD2/Kaas/Projects/SquamateAlignments/SoftMasking/Colubridae/Thamnophis/Thamnophis_elegans/Results/0_RepeatModeler"
 
+# NOTE: Change this each time you run the script
 # Set the repclassifier directory for output
-repclassifier_dir="/home/administrator/ExtraSSD2/Kaas/Projects/SquamateAlignments/SoftMasking/Naja_nigricollis/Results/1_Repclassifier"
+repclassifier_dir="$HOME/ExtraSSD2/Kaas/Projects/SquamateAlignments/SoftMasking/Colubridae/Thamnophis/Thamnophis_elegans/Results/1_Repclassifier"
 
 # Create log directory under the output directory if it does not exist
 [ ! -d "$repclassifier_dir/Logs" ] && mkdir -p "$repclassifier_dir/Logs"
@@ -27,6 +28,7 @@ exec > >(tee -a "$log_file") 2>&1
 echo "Starting repclassifier script at $(date)"
 echo "Log file created at: $log_file"
 
+# NOTE: Change this when needed
 # Set the number of threads for repclassifier
 threads=40
 
@@ -42,8 +44,9 @@ else
 	echo "Mamba environment active: $CONDA_DEFAULT_ENV"
 fi
 
+# NOTE: Change this each time you run the script
 # Define the path to repclassifier
-repclassifier_cmd="/home/administrator/ExtraSSD2/Sid/Crotalus_atrox_genomics/9_NewRepeatAnnotationAndMasking/InstallationFiles/repclassifier"
+repclassifier_cmd="$HOME/ExtraSSD2/Sid/Crotalus_atrox_genomics/9_NewRepeatAnnotationAndMasking/InstallationFiles/repclassifier"
 
 # Set the RepeatModeler families file
 repeat_modeler_families=$(find "$repeat_modeler_dir" -name "*-families.fa" -print -quit)
@@ -55,8 +58,9 @@ if [[ -z "$repeat_modeler_families" ]]; then
     exit 1
 fi
 
+# NOTE: Change this each time you run the script
 # Set the prefix for headers in the RepeatModeler families file
-species_prefix="najNig1_"
+species_prefix="thaEle1_"
 
 # Set the name of the new file with prefixes added
 repeat_modeler_families_prefix=$(basename "$repeat_modeler_families" .fa).prefix.fa
@@ -95,8 +99,10 @@ fi
 # Step #3-12: Iterative repclassifier rounds
 # Define the number of rounds to run the loop for
 num_rounds=10
+
+# NOTE: Change this when needed
 # Define the custom known file for round 6 that Todd made containing 18 snake repeat elements
-custom_snake_repeats="/home/administrator/ExtraSSD2/Kaas/Projects/SquamateAlignments/SoftMasking/known_repeat_elements/18Snakes.Known.clust.fasta"
+custom_snake_repeats="$HOME/ExtraSSD2/Kaas/Projects/SquamateAlignments/SoftMasking/known_repeat_elements/18Snakes.Known.clust.fasta"
 echo "Custom snake repeats file: $custom_snake_repeats"
 
 # Move to the repclassifier output directory
