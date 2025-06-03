@@ -11,18 +11,22 @@ ScriptDescription
 # Activate the mamba environment containing RepeatModeler
 source "$HOME/miniforge3/bin/activate" RepeatMaskAnnot
 
+# NOTE: Change this if needed
 # Set the number of threads for RepeatModeler
 threads=30
 
+# NOTE: Change this each time you run the script
 # Set the output directory
 output_directory="$HOME/Documents/Kaas/SquamateAlignments/SoftMasking/Viperidae/Vipera/Vipera_latastei/Results/0_RepeatModeler"
 
 # Create log directory under the output directory if it does not exist
 [ ! -d "$output_directory/Logs" ] && mkdir -p "$output_directory/Logs"
 
+# NOTE: Change this each time you run the script
 # Set the name for the RepeatModeler database
 database_name="Vipera_latastei"
 
+# NOTE: Change this each time you run the script
 # Reference genome
 reference_genome="$HOME/Documents/Kaas/SquamateAlignments/Reference_Genomes/Public_Genomes/Viperidae/Vipera/Vipera_latastei/ncbi_dataset/data/GCA_024294585.1/GCA_024294585.1_rVipLat1.pri_genomic.fna"
 
