@@ -11,12 +11,14 @@ The aforementioned blog post can be found here:
 https://darencard.net/blog/2022-07-09-genome-repeat-annotation/
 ScriptDescription
 
-# ====================  SETUP ==================== 
+# ====================  SETUP ====================
+# NOTE: Change this when needed
 # Reference genome
-reference_genome="$HOME/ExtraSSD2/Kaas/Projects/SquamateAlignments/Reference_Genomes/Sekar_Genomes/Scaffold_Assemblies/Elapidae/Naja/Naja_nigricollis_najNig1/Assembly/najNig2.ragtag.scaffold_naNa.REHEADER.MT.fasta"
+reference_genome="$HOME/ExtraSSD2/Kaas/Projects/SquamateAlignments/Reference_Genomes/Public_Genomes/Colubridae/Thamnophis/Thamnophis_elegans/ncbi_dataset/data/GCA_009769695.1/GCA_009769695.1_rThaEle1.alt_genomic.fna"
 
+# NOTE: Change this when needed
 # Set a directory for the genomic files create by this script
-reference_genome_extra_dir="$HOME/ExtraSSD2/Kaas/Projects/SquamateAlignments/Reference_Genomes/Sekar_Genomes/Scaffold_Assemblies/Elapidae/Naja/Naja_nigricollis_najNig1/Assembly/FromRepeatMaskerProcess"
+reference_genome_extra_dir="$HOME/ExtraSSD2/Kaas/Projects/SquamateAlignments/Reference_Genomes/Public_Genomes/Colubridae/Thamnophis/Thamnophis_elegans/FromRepeatMaskerProcess"
 
 # Make the above directory if it does not exist
 [ ! -d "$reference_genome_extra_dir" ] && mkdir -p "$reference_genome_extra_dir"
@@ -24,11 +26,13 @@ reference_genome_extra_dir="$HOME/ExtraSSD2/Kaas/Projects/SquamateAlignments/Ref
 # Genome basename
 species_name=$(basename "$reference_genome" .fasta)
 
+# NOTE: Change this when needed
 # Species name abreviation
-species_abbreviation="najNig2"
+species_abbreviation="ThaEle1"
 
+# NOTE: Change this when needed
 # Set the RepeatMasker directory
-repeat_masker_dir="$HOME/ExtraSSD2/Kaas/Projects/SquamateAlignments/SoftMasking/Naja_nigricollis/Results/2_RepeatMasker"
+repeat_masker_dir="$HOME/ExtraSSD2/Kaas/Projects/SquamateAlignments/SoftMasking/Colubridae/Thamnophis/Thamnophis_elegans/Results/2_RepeatMasker"
 
 # Make the logs directory if it doesn't exist
 [ ! -d "$repeat_masker_dir/Logs" ] && mkdir -p "$repeat_masker_dir/Logs"
@@ -143,6 +147,7 @@ for round in "${rounds[@]}"; do
     mkdir -p "$round"
 done
 
+# NOTE: Change this when needed
 # Set the number of threads for RepeatMasker -pa to use
 t=40
 
@@ -314,6 +319,8 @@ round4_genome=$(find "$round4" -type f -name "*.19snake_known_mask.fasta" | head
 # Set path for the 10th round of repclassifier
 unknown_library="../1_Repclassifier/round-10_Self/round-10_Self.unknown"
 # Define the custom known file for round 6 that Todd made containing 18 snake repeat elements
+
+# NOTE: Change this when needed
 custom_18snake_unknown_repeats="$HOME/ExtraSSD2/Kaas/Projects/SquamateAlignments/SoftMasking/known_repeat_elements/18Snakes.Unknown.clust.fasta"
 # Set the new file path
 new_unknown_19snakes_library="../1_Repclassifier/round-10_Self/19Snakes_with_$species_abbreviation.Unknown.clust.fasta"

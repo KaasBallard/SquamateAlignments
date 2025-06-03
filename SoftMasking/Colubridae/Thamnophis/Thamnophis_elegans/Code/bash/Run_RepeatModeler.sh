@@ -11,18 +11,22 @@ ScriptDescription
 # Activate the mamba environment containing RepeatModeler
 source "$HOME/mambaforge/bin/activate" RepeatMaskAnnot
 
+# NOTE: Change this when needed
 # Set the number of threads for RepeatModeler
 threads=44
 
+# NOTE: Change this each time you run this script
 # Set the output directory
 output_directory="$HOME/ExtraSSD2/Kaas/Projects/SquamateAlignments/SoftMasking/Colubridae/Thamnophis/Thamnophis_elegans/Results/0_RepeatModeler"
 
 # Create log directory under the output directory if it does not exist
 [ ! -d "$output_directory/Logs" ] && mkdir -p "$output_directory/Logs"
 
+# NOTE: Change this each time you run this script
 # Set the name for the RepeatModeler database
 database_name="Thamnophis_elegans"
 
+# NOTE: Change this each time you run this script
 # Reference genome
 reference_genome="$HOME/ExtraSSD2/Kaas/Projects/SquamateAlignments/Reference_Genomes/Public_Genomes/Colubridae/Thamnophis/Thamnophis_elegans/ncbi_dataset/data/GCA_009769695.1/GCA_009769695.1_rThaEle1.alt_genomic.fna"
 
