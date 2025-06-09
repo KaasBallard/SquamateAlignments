@@ -175,7 +175,7 @@ else
 		"$reference_genome" 2>&1 | tee "Logs/$round1.log"
 
 	# Rename some of the files to make it more clear what they are
-	rename 's/fasta/simple_mask/g' "$round1"/*
+	rename 's/\.(fasta|fna)\./.simple_mask./g' "$round1"/*
 	rename 's/.masked$/.fasta/g' "$round1"/*
 
 	# Check if the files were created, exit otherwise
