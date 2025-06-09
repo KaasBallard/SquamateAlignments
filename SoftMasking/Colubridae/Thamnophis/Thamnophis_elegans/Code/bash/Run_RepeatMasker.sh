@@ -1,6 +1,6 @@
 #!/bin/bash
 : <<'ScriptDescription'
-Date: 2025/03/17
+Date: 2025/06/09
 This script is designed to run RepeatMasker, and is based off of Sid's script and Daren's blog post.
 It performs hard masking and then soft masking.
 RepeatMasker can be found here:
