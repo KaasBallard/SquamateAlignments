@@ -277,7 +277,7 @@ known_library="../1_Repclassifier/round-10_Self/round-10_Self.known"
 
 # NOTE: Change these when needed
 # Define the custom known file for round 6 that Todd made containing 18 snake repeat elements
-custom_18snake_known_repeats="$HOME/Documents/Kaas/SquamateAlignments/SoftMasking/known_repeat_elements/18Snakes.Known.clust.fasta"
+custom_18snake_known_repeats="$HOME/Documents/Kaas/SquamateAlignments/SoftMasking/known_repeat_elements/known_repeat_elements/18Snakes.Known.clust.fasta"
 # Set the new file path
 new_known_19snakes_library="../1_Repclassifier/round-10_Self/19Snakes_with_$species_abbreviation.Known.clust.fasta"
 
