@@ -24,7 +24,7 @@ reference_genome_extra_dir="$HOME/Documents/Kaas/SquamateAlignments/Reference_Ge
 [ ! -d "$reference_genome_extra_dir" ] && mkdir -p "$reference_genome_extra_dir"
 
 # Genome basename
-species_name=$(basename "$reference_genome" .fasta)
+species_name=$(basename "$reference_genome"  | sed -E 's/\.(fasta|fna|fa)$//') # This will allow for more filename extensions in the species name
 
 # NOTE: Change this when needed
 # Species name abreviation
@@ -330,7 +330,7 @@ custom_18snake_unknown_repeats="$HOME/Documents/Kaas/SquamateAlignments/SoftMask
 # Set the new file path
 new_unknown_19snakes_library="../1_Repclassifier/round-10_Self/19Snakes_with_$species_abbreviation.Unknown.clust.fasta"
 
-# Concatenate the two files togehter
+# Concatenate the two files together
 cat "$custom_18snake_unknown_repeats" "$unknown_library" > "$new_unknown_19snakes_library"
 
 # run "19snake" unknown masking
