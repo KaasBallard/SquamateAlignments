@@ -24,7 +24,7 @@ reference_genome_extra_dir="$HOME/ExtraSSD2/Kaas/Projects/SquamateAlignments/Ref
 [ ! -d "$reference_genome_extra_dir" ] && mkdir -p "$reference_genome_extra_dir"
 
 # Genome basename
-species_name=$(basename "$reference_genome" .fasta)
+species_name=$(basename "$reference_genome" | sed -E 's/\.(fasta|fna|fa)$//') # This will allow for more filename extensions in the species name
 
 # NOTE: Change this when needed
 # Species name abreviation
