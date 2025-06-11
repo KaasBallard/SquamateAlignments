@@ -45,6 +45,10 @@ exec > >(tee -a "$log_file") 2>&1
 # Add the FindRegionCoordinates program to the PATH
 export PATH="$HOME/ExtraSSD2/Kaas/Projects/FindRegionCoordinates:$PATH"
 
+# NOTE: Change this when needed
+# Add the PERL5 path
+export PERL5LIB=$HOME/mambaforge/envs/RepeatMaskAnnot/share/RepeatMasker:$PERL5LIB
+
 # Change the directory to the RepeatMasker directory if it isn't there already
 cd "$repeat_masker_dir" || exit 1
 

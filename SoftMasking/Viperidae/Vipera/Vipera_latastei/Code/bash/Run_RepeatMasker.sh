@@ -45,6 +45,7 @@ exec > >(tee -a "$log_file") 2>&1
 # Add the FindRegionCoordinates program to the PATH
 export PATH="$HOME/Documents/Kaas/FindRegionCoordinates:$PATH"
 
+# NOTE: Change this when needed
 # Add the PERL5 path
 export PERL5LIB=$HOME/miniforge3/envs/RepeatMaskAnnot/share/RepeatMasker:$PERL5LIB
 
