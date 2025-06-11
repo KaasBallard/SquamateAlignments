@@ -60,9 +60,9 @@ fi
 
 # Send a notification that the script has finished
 if [ $? -eq 0 ]; then # if [ $? -eq 0 ] checks if the last command was successful
-    curl -d "✅ SUCCESS: RepeatModeler completed for $database_name at $(date). Check logs at $output_directory/Logs/" \
-         ntfy.sh/kaas-ballard-Klauber-scripts-27857274017852061578
+	curl -d "✅ SUCCESS: RepeatModeler completed for $database_name at $(date). Check logs at $output_directory/Logs/" \
+		ntfy.sh/kaas-ballard-Klauber-scripts-27857274017852061578
 else
-    curl -d "❌ FAILED: RepeatModeler failed for $database_name at $(date). Check logs for errors." \
-         ntfy.sh/kaas-ballard-Klauber-scripts-27857274017852061578
+	curl -d "❌ FAILED: RepeatModeler failed for $database_name at $(date). Check logs for errors." \
+		ntfy.sh/kaas-ballard-Klauber-scripts-27857274017852061578
 fi
