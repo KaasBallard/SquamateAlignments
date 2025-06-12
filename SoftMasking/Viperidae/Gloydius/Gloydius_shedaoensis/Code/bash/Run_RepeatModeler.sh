@@ -32,7 +32,7 @@ reference_genome="$HOME/Documents/Kaas/SquamateAlignments/Reference_Genomes/Publ
 
 # Send myself a notification that the script is starting
 curl -d "🔔 Starting RepeatModeler for $database_name at $(date). Reference genome: $reference_genome. Check logs at $output_directory/Logs/ for details." \
-	 ntfy.sh/kaas-ballard-Klauber-scripts-27857274017852061578
+	ntfy.sh/kaas-ballard-Klauber-scripts-27857274017852061578
 
 # Change the directory to the output directory so that the RM_ files are created there
 cd "$output_directory" || { echo "Failed to change directory to $output_directory"; exit 1; }

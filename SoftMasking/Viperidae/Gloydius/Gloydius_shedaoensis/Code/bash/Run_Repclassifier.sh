@@ -1,6 +1,6 @@
 #!/bin/bash
 : <<'ScriptDescription'
-Date: 2025/03/11
+Date: 2025/06/12
 This script is designed to repclassifier, which is a piece of softwart that uses Repbase database and RepeatMasker to try and identify unknown elements with sequence similarity to curated repeat elements in Repbase.
 It has another mode that can uses a custom library, in the form of a fasta file. This script will use both modes.
 The program can be found here:
@@ -12,11 +12,11 @@ ScriptDescription
 
 # NOTE: Change this each time you run the script
 # Set the RepeatModeler directory
-repeat_modeler_dir="$HOME/Documents/Kaas/SquamateAlignments/SoftMasking/Viperidae/Vipera/Vipera_latastei/Results/0_RepeatModeler"
+repeat_modeler_dir="$HOME/Documents/Kaas/SquamateAlignments/SoftMasking/Viperidae/Gloydius/Gloydius_shedaoensis/Results/0_RepeatModeler"
 
 # NOTE: Change this each time you run the script
 # Set the repclassifier directory for output
-repclassifier_dir="$HOME/Documents/Kaas/SquamateAlignments/SoftMasking/Viperidae/Vipera/Vipera_latastei/Results/1_Repclassifier"
+repclassifier_dir="$HOME/Documents/Kaas/SquamateAlignments/SoftMasking/Viperidae/Gloydius/Gloydius_shedaoensis/Results/1_Repclassifier"
 
 # Create log directory under the output directory if it does not exist
 [ ! -d "$repclassifier_dir/Logs" ] && mkdir -p "$repclassifier_dir/Logs"
@@ -59,8 +59,16 @@ if [[ -z "$repeat_modeler_families" ]]; then
 fi
 
 # NOTE: Change this each time you run the script
+species_name="Gloydius_shedaoensis"
+
+# NOTE: Change this each time you run the script
 # Set the prefix for headers in the RepeatModeler families file
-species_prefix="vipLat1_"
+species_prefix="gloShe1_"
+
+# Send myself a notification that the script is starting
+curl -d "🔔 Starting repclassifier for $species_name at $(date). Check logs at $repclassifier_dir/Logs/ for details." \
+	ntfy.sh/kaas-ballard-Klauber-scripts-27857274017852061578
+
 
 # Set the name of the new file with prefixes added
 repeat_modeler_families_prefix=$(basename "$repeat_modeler_families" .fa).prefix.fa
@@ -251,3 +259,14 @@ for ((round=1; round<=num_rounds; round++)); do
 done
 
 echo "All repclassifier rounds completed successfully at $(date)"
+
+# Send a notification that the script has finished successfully or unsuccessfully
+# Check if the final known and unknown files exist
+if [ -f "$repclassifier_dir/round-10_Self/round-10_Self.known" ] && [ -f "$repclassifier_dir/round-10_Self/round-10_Self.unknown" ]; then
+	curl -d "✅ SUCCESS: repclassifier completed for $species_name at $(date). Check logs at $repclassifier_dir/Logs/" \
+		ntfy.sh/kaas-ballard-Klauber-scripts-27857274017852061578
+# If the files do not exist, send a failure notification
+else
+	curl -d "❌ FAILED: repclassifier failed for $species_name at $(date). Check logs for errors." \
+		ntfy.sh/kaas-ballard-Klauber-scripts-27857274017852061578
+fi
