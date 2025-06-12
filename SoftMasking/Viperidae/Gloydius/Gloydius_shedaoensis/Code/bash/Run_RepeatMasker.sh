@@ -1,6 +1,6 @@
 #!/bin/bash
 : <<'ScriptDescription'
-Date: 2025/03/17
+Date: 2025/06/12
 This script is designed to run RepeatMasker, and is based off of Sid's script and Daren's blog post.
 It performs hard masking and then soft masking.
 RepeatMasker can be found here:
@@ -14,11 +14,11 @@ ScriptDescription
 # ====================  SETUP ====================
 # NOTE: Change this when needed
 # Reference genome
-reference_genome="$HOME/Documents/Kaas/SquamateAlignments/Reference_Genomes/Public_Genomes/Viperidae/Vipera/Vipera_latastei/ncbi_dataset/data/GCA_024294585.1/GCA_024294585.1_rVipLat1.pri_genomic.fna"
+reference_genome="$HOME/Documents/Kaas/SquamateAlignments/Reference_Genomes/Public_Genomes/Viperidae/Gloydius/Gloydius_shedaoensis/ngdc_dataset/GWHBWDU00000000.genome.fasta"
 
 # NOTE: Change this when needed
 # Set a directory for the genomic files create by this script
-reference_genome_extra_dir="$HOME/Documents/Kaas/SquamateAlignments/Reference_Genomes/Public_Genomes/Viperidae/Vipera/Vipera_latastei/FromRepeatMaskerProcess"
+reference_genome_extra_dir="$HOME/Documents/Kaas/SquamateAlignments/Reference_Genomes/Public_Genomes/Viperidae/Gloydius/Gloydius_shedaoensis/FromRepeatMaskerProcess"
 
 # Make the above directory if it does not exist
 [ ! -d "$reference_genome_extra_dir" ] && mkdir -p "$reference_genome_extra_dir"
@@ -28,11 +28,11 @@ species_name=$(basename "$reference_genome"  | sed -E 's/\.(fasta|fna|fa)$//') #
 
 # NOTE: Change this when needed
 # Species name abreviation
-species_abbreviation="vipLat1"
+species_abbreviation="gloShe1"
 
 # NOTE: Change this when needed
 # Set the RepeatMasker directory
-repeat_masker_dir="$HOME/Documents/Kaas/SquamateAlignments/SoftMasking/Viperidae/Vipera/Vipera_latastei/Results/2_RepeatMasker"
+repeat_masker_dir="$HOME/Documents/Kaas/SquamateAlignments/SoftMasking/Viperidae/Gloydius/Gloydius_shedaoensis/Results/2_RepeatMasker"
 
 # Make the logs directory if it doesn't exist
 [ ! -d "$repeat_masker_dir/Logs" ] && mkdir -p "$repeat_masker_dir/Logs"
@@ -167,6 +167,10 @@ if check_round "$round1"; then
 	echo -e "\e[31Files found for $round1. Skipping.\e[0m"
 else
 	echo -e "\e[31Files not found for $round1. Running RepeatMasker now.\e[0m"
+
+	# Send a notifcation that the first round is starting
+	curl -d "🔔 Starting RepeatMasker round 1: SSR masking for $reference_genome at $(date). Check logs at $repeat_masker_dir/Logs/ for details." \
+		ntfy.sh/kaas-ballard-Klauber-scripts-27857274017852061578
 
 	# Run RepeatMasker
 	RepeatMasker \
@@ -566,3 +570,21 @@ echo -e "\e[31mCompressing outputs...\e[0m"
 gzip */*.out
 gzip */*.fasta
 gzip */*.align
+
+# Send a notification that the script has finished
+# Check if the last gzip command was successful and if key output files exist
+if [ $? -eq 0 ] && \
+   [ -f "$round6/$species_name.Full_Mask.soft.fasta.gz" ] && \
+   [ -f "$round6/$species_name.Full_Mask.out.gz" ] && \
+   [ -f "$round6/$species_name.Full_Mask.cat.gz" ] && \
+   [ -f "$round6/$species_name.Full_Mask.landscape.html" ] && \
+   [ -f "$round6/$species_name.Full_Mask.reformat.gff3" ] && \
+   [ -f "$round6/$species_name.Full_Mask.gff3" ] && \
+   [ -f "$round6/$species_name.Full_Mask.align.gz" ] && \
+   [ -f "$round6/$species_name.Full_Mask.tbl" ]; then
+	curl -d "✅ SUCCESS: RepeatMasker completed for $species_abbreviation at $(date). Results in $repeat_masker_dir/$round6/" \
+		ntfy.sh/kaas-ballard-Klauber-scripts-27857274017852061578
+else
+	curl -d "❌ FAILED: RepeatMasker failed or key output files are missing for $species_abbreviation at $(date). Check logs at $repeat_masker_dir/Logs/ for errors." \
+		ntfy.sh/kaas-ballard-Klauber-scripts-27857274017852061578
+fi
