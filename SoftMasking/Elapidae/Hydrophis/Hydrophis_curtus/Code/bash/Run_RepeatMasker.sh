@@ -594,14 +594,14 @@ echo "Total runtime: $((runtime / 3600)) hours, $(((runtime % 3600) / 60)) minut
 # Send a notification that the script has finished
 # Check if the last gzip command was successful and if key output files exist
 if [ $? -eq 0 ] && \
-   [ -f "$round6/$species_name.Full_Mask.soft.fasta.gz" ] && \
-   [ -f "$round6/$species_name.Full_Mask.out.gz" ] && \
-   [ -f "$round6/$species_name.Full_Mask.cat.gz" ] && \
-   [ -f "$round6/$species_name.Full_Mask.landscape.html" ] && \
-   [ -f "$round6/$species_name.Full_Mask.reformat.gff3" ] && \
-   [ -f "$round6/$species_name.Full_Mask.gff3" ] && \
-   [ -f "$round6/$species_name.Full_Mask.align.gz" ] && \
-   [ -f "$round6/$species_name.Full_Mask.tbl" ]; then
+	[ -f "$round6/$species_name.Full_Mask.soft.fasta.gz" ] && \
+	[ -f "$round6/$species_name.Full_Mask.out.gz" ] && \
+	[ -f "$round6/$species_name.Full_Mask.cat.gz" ] && \
+	[ -f "$round6/$species_name.Full_Mask.landscape.html" ] && \
+	[ -f "$round6/$species_name.Full_Mask.reformat.gff3" ] && \
+	[ -f "$round6/$species_name.Full_Mask.gff3" ] && \
+	[ -f "$round6/$species_name.Full_Mask.align.gz" ] && \
+	[ -f "$round6/$species_name.Full_Mask.tbl" ]; then
 	curl -d "✅ SUCCESS: RepeatMasker completed for $species_abbreviation at $(date). Total runtime was: $((runtime / 3600)) hours, $(((runtime % 3600) / 60)) minutes, $((runtime % 60)) seconds. Results in $repeat_masker_dir/$round6/" \
 		ntfy.sh/"$ntfy_topic"
 else
