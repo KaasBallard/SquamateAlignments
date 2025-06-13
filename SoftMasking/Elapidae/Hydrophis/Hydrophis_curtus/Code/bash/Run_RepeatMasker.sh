@@ -1,6 +1,6 @@
 #!/bin/bash
 : <<'ScriptDescription'
-Date: 2025/06/09
+Date: 2025/06/12
 This script is designed to run RepeatMasker, and is based off of Sid's script and Daren's blog post.
 It performs hard masking and then soft masking.
 RepeatMasker can be found here:
@@ -12,13 +12,20 @@ https://darencard.net/blog/2022-07-09-genome-repeat-annotation/
 ScriptDescription
 
 # ====================  SETUP ====================
+# Set the start time of the script
+start_time=$(date '+%Y-%m-%d %H:%M:%S')
+
+# NOTE: change this when needed
+# Set the ntfy.sh topic to send notifications
+ntfy_topic="kaas-ballard-Robin-scripts-72724027625978"
+
 # NOTE: Change this when needed
 # Reference genome
-reference_genome="$HOME/ExtraSSD2/Kaas/Projects/SquamateAlignments/Reference_Genomes/Public_Genomes/Colubridae/Thamnophis/Thamnophis_elegans/ncbi_dataset/data/GCA_009769695.1/GCA_009769695.1_rThaEle1.alt_genomic.fna"
+reference_genome="$HOME/ExtraSSD2/Kaas/Projects/SquamateAlignments/Reference_Genomes/Public_Genomes/Elapidae/Hydrophis/Hydrophis_curtus/ncbi_dataset/data/GCA_037043045.1/GCA_037043045.1_ASM3704304v1_genomic.fna"
 
 # NOTE: Change this when needed
 # Set a directory for the genomic files create by this script
-reference_genome_extra_dir="$HOME/ExtraSSD2/Kaas/Projects/SquamateAlignments/Reference_Genomes/Public_Genomes/Colubridae/Thamnophis/Thamnophis_elegans/FromRepeatMaskerProcess"
+reference_genome_extra_dir="$HOME/ExtraSSD2/Kaas/Projects/SquamateAlignments/Reference_Genomes/Public_Genomes/Elapidae/Hydrophis/Hydrophis_curtus/FromRepeatMaskerProcess"
 
 # Make the above directory if it does not exist
 [ ! -d "$reference_genome_extra_dir" ] && mkdir -p "$reference_genome_extra_dir"
@@ -28,11 +35,11 @@ species_name=$(basename "$reference_genome" | sed -E 's/\.(fasta|fna|fa)$//') # 
 
 # NOTE: Change this when needed
 # Species name abreviation
-species_abbreviation="ThaEle1"
+species_abbreviation="hyoCur1"
 
 # NOTE: Change this when needed
 # Set the RepeatMasker directory
-repeat_masker_dir="$HOME/ExtraSSD2/Kaas/Projects/SquamateAlignments/SoftMasking/Colubridae/Thamnophis/Thamnophis_elegans/Results/2_RepeatMasker"
+repeat_masker_dir="$HOME/ExtraSSD2/Kaas/Projects/SquamateAlignments/SoftMasking/Elapidae/Hydrophis/Hydrophis_curtus/Results/2_RepeatMasker"
 
 # Make the logs directory if it doesn't exist
 [ ! -d "$repeat_masker_dir/Logs" ] && mkdir -p "$repeat_masker_dir/Logs"
