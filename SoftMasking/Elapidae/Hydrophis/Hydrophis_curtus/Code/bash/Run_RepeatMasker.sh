@@ -175,6 +175,10 @@ if check_round "$round1"; then
 else
 	echo -e "\e[31Files not found for $round1. Running RepeatMasker now.\e[0m"
 
+	# Send a notifcation that the first round is starting
+	curl -d "🔔 Starting RepeatMasker round 1: SSR masking for $reference_genome at $(date). Check logs at $repeat_masker_dir/Logs/ for details." \
+		ntfy.sh/"$ntfy_topic"
+
 	# Run RepeatMasker
 	RepeatMasker \
 		-pa "$t" \
@@ -383,6 +387,10 @@ round5_genome=$(find "$round5" -type f -name "*.19snake_unknown_mask.fasta" | he
 if check_round "$round6"; then
 	echo -e "\e[31Files found for $round6. Skipping.\e[0m"
 else
+	# Send a notifcation that the final round is starting
+	curl -d "🔔 Starting RepeatMasker round 6: Full Mask for $reference_genome at $(date). Check logs at $repeat_masker_dir/Logs/ for details." \
+		ntfy.sh/"$ntfy_topic"
+
 	echo -e "\e[31Files not found for $round6. Concatenating outputs now.\e[0m"
 
 	# Summarize/combine full output
@@ -573,3 +581,30 @@ echo -e "\e[31mCompressing outputs...\e[0m"
 gzip */*.out
 gzip */*.fasta
 gzip */*.align
+
+# Set an end time for the script
+end_time=$(date '+%Y-%m-%d %H:%M:%S')
+
+# Calculate the duration of the script
+runtime=$(date -u -d "$end_time" +"%s")-$(( $(date -u -d "$start_time" +"%s") ))
+
+# Tell the user in the log file and term how long the script took to run
+echo "Total runtime: $((runtime / 3600)) hours, $(((runtime % 3600) / 60)) minutes, $((runtime % 60)) seconds"
+
+# Send a notification that the script has finished
+# Check if the last gzip command was successful and if key output files exist
+if [ $? -eq 0 ] && \
+   [ -f "$round6/$species_name.Full_Mask.soft.fasta.gz" ] && \
+   [ -f "$round6/$species_name.Full_Mask.out.gz" ] && \
+   [ -f "$round6/$species_name.Full_Mask.cat.gz" ] && \
+   [ -f "$round6/$species_name.Full_Mask.landscape.html" ] && \
+   [ -f "$round6/$species_name.Full_Mask.reformat.gff3" ] && \
+   [ -f "$round6/$species_name.Full_Mask.gff3" ] && \
+   [ -f "$round6/$species_name.Full_Mask.align.gz" ] && \
+   [ -f "$round6/$species_name.Full_Mask.tbl" ]; then
+	curl -d "✅ SUCCESS: RepeatMasker completed for $species_abbreviation at $(date). Total runtime was: $((runtime / 3600)) hours, $(((runtime % 3600) / 60)) minutes, $((runtime % 60)) seconds. Results in $repeat_masker_dir/$round6/" \
+		ntfy.sh/"$ntfy_topic"
+else
+	curl -d "❌ FAILED: RepeatMasker failed or key output files are missing for $species_abbreviation at $(date). Check logs at $repeat_masker_dir/Logs/ for errors." \
+		ntfy.sh/"$ntfy_topic"
+fi
