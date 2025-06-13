@@ -1,6 +1,6 @@
 #!/bin/bash
 : <<'ScriptDescription'
-Date: 2025/06/02
+Date: 2025/06/12
 This script is designed to repclassifier, which is a piece of softwart that uses Repbase database and RepeatMasker to try and identify unknown elements with sequence similarity to curated repeat elements in Repbase.
 It has another mode that can uses a custom library, in the form of a fasta file. This script will use both modes.
 The program can be found here:
@@ -10,13 +10,19 @@ The blog that explains the program can be found here:
 https://darencard.net/blog/2022-07-09-genome-repeat-annotation/
 ScriptDescription
 
+# Set the start time of the script
+start_time=$(date '+%Y-%m-%d %H:%M:%S')
+
+# Set ntfy.sh topic for notifications
+ntfy_topic="kaas-ballard-Robin-scripts-72724027625978"
+
 # NOTE: Change this each time you run the script
 # Set the RepeatModeler directory
-repeat_modeler_dir="$HOME/ExtraSSD2/Kaas/Projects/SquamateAlignments/SoftMasking/Colubridae/Thamnophis/Thamnophis_elegans/Results/0_RepeatModeler"
+repeat_modeler_dir="$HOME/ExtraSSD2/Kaas/Projects/SquamateAlignments/SoftMasking/Elapidae/Hydrophis/Hydrophis_curtus/Results/0_RepeatModeler"
 
 # NOTE: Change this each time you run the script
 # Set the repclassifier directory for output
-repclassifier_dir="$HOME/ExtraSSD2/Kaas/Projects/SquamateAlignments/SoftMasking/Colubridae/Thamnophis/Thamnophis_elegans/Results/1_Repclassifier"
+repclassifier_dir="$HOME/ExtraSSD2/Kaas/Projects/SquamateAlignments/SoftMasking/Elapidae/Hydrophis/Hydrophis_curtus/Results/1_Repclassifier"
 
 # Create log directory under the output directory if it does not exist
 [ ! -d "$repclassifier_dir/Logs" ] && mkdir -p "$repclassifier_dir/Logs"
@@ -59,8 +65,15 @@ if [[ -z "$repeat_modeler_families" ]]; then
 fi
 
 # NOTE: Change this each time you run the script
+species_name="Hydrophis_curtus"
+
+# NOTE: Change this each time you run the script
 # Set the prefix for headers in the RepeatModeler families file
-species_prefix="thaEle1_"
+species_prefix="hyoCur1_"
+
+# Send myself a notification that the script is starting
+curl -d "🔔 Starting repclassifier for $species_name at $(date). Check logs at $repclassifier_dir/Logs/ for details." \
+	ntfy.sh/"$ntfy_topic"
 
 # Set the name of the new file with prefixes added
 repeat_modeler_families_prefix=$(basename "$repeat_modeler_families" .fa).prefix.fa
@@ -251,3 +264,23 @@ for ((round=1; round<=num_rounds; round++)); do
 done
 
 echo "All repclassifier rounds completed successfully at $(date)"
+
+# Set the end time of the script
+end_time=$(date '+%Y-%m-%d %H:%M:%S')
+
+# Calculate the total runtime
+runtime=$(date -u -d "$end_time" +"%s")-$(( $(date -u -d "$start_time" +"%s") ))
+
+# Tell the user in the log file and term how long the script took to run
+echo "Total runtime: $((runtime / 3600)) hours, $(((runtime % 3600) / 60)) minutes, $((runtime % 60)) seconds"
+
+# Send a notification that the script has finished successfully or unsuccessfully
+# Check if the final known and unknown files exist
+if [ -f "$repclassifier_dir/round-10_Self/round-10_Self.known" ] && [ -f "$repclassifier_dir/round-10_Self/round-10_Self.unknown" ]; then
+	curl -d "✅ SUCCESS: repclassifier completed for $species_name at $(date). Total runtime was: $((runtime / 3600)) hours, $(((runtime % 3600) / 60)) minutes, $((runtime % 60)) seconds. Check logs at $repclassifier_dir/Logs/" \
+		ntfy.sh/"$ntfy_topic"
+# If the files do not exist, send a failure notification
+else
+	curl -d "❌ FAILED: repclassifier failed for $species_name at $(date). Check logs for errors." \
+		ntfy.sh/"$ntfy_topic"
+fi
