@@ -84,9 +84,9 @@ echo "Total runtime: $((runtime / 3600)) hours, $(((runtime % 3600) / 60)) minut
 # Send a notification that the script has finished
 if [ $? -eq 0 ] && \
 	[ -f "$output_directory/$species_name.nsq" ] && \
-	[ -f "$output_directory/$species_name.fa" ] && \
-	[ -f "$output_directory/$species_name.prefix.fa.known" ] && \
-	[ -f "$output_directory/$species_name.prefix.fa.unknown" ]; then # if [ $? -eq 0 ] checks if the last command was successful
+	[ -f "$output_directory/$species_name-families.fa" ] && \
+	[ -f "$output_directory/$species_name-families.stk" ] && \
+	[ -f "$output_directory/$species_name.njs" ]; then # if [ $? -eq 0 ] checks if the last command was successful
 	curl -d "✅ SUCCESS: RepeatModeler completed for $species_name at $(date). Total runtime: $((runtime / 3600)) hours, $(((runtime % 3600) / 60)) minutes, $((runtime % 60)) secondsCheck logs at $output_directory/Logs/" \
 		ntfy.sh/"$ntfy_topic"
 else
