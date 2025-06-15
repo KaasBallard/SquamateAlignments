@@ -18,7 +18,7 @@ ntfy_topic="kaas-ballard-Klauber-scripts-27857274017852061578"
 
 # SET: Change this each time you run this script
 # Set the name for the RepeatModeler database
-species_name="Crotalus_adamanteus"
+species_name="Vipera_ursinii"
 
 # SET: Change this each time you run this script
 # Set the family name for the species
@@ -26,11 +26,11 @@ family="Viperidae"
 
 # SET: Change this each time you run this script
 # Set the genus name for the species
-genus="Crotalus"
+genus="Vipera"
 
 # SET: Change this each time you run the script
 # Set the prefix for headers in the RepeatModeler families file
-species_prefix="croAda1_"
+species_prefix="vipUrs1_"
 
 # NOTE: Change this each time you run the script
 # Set the RepeatModeler directory
