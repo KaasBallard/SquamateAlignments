@@ -15,17 +15,32 @@ ScriptDescription
 # Set the start time of the script
 start_time=$(date '+%Y-%m-%d %H:%M:%S')
 
-# NOTE: change this when needed
-# Set the ntfy.sh topic to send notifications
+# Set ntfy.sh topic for notifications
 ntfy_topic="kaas-ballard-Robin-scripts-72724027625978"
 
-# NOTE: Change this when needed
+# SET: Change this each time you run this script
+# Set the family name for the species
+family="Elapidae"
+
+# SET: Change this each time you run this script
+# Set the genus name for the species
+genus="Bungarus"
+
+# SET: Change this each time you run this script
+# Set the name for the species
+species="Bungarus_multicinctus"
+
+# SET: Change this when needed
+# Species name abreviation
+species_abbreviation="bunMul1"
+
+# SET: Change this when needed
 # Reference genome
-reference_genome="$HOME/ExtraSSD2/Kaas/Projects/SquamateAlignments/Reference_Genomes/Public_Genomes/Elapidae/Hydrophis/Hydrophis_curtus/ncbi_dataset/data/GCA_037043045.1/GCA_037043045.1_ASM3704304v1_genomic.fna"
+reference_genome="$HOME/ExtraSSD2/Kaas/Projects/SquamateAlignments/Reference_Genomes/Public_Genomes/Elapidae/Bungarus/Bungarus_multicinctus/ncbi_dataset/data/GCA_023653725.1/GCA_023653725.1_ASM2365372v1_genomic.fna"
 
 # NOTE: Change this when needed
 # Set a directory for the genomic files create by this script
-reference_genome_extra_dir="$HOME/ExtraSSD2/Kaas/Projects/SquamateAlignments/Reference_Genomes/Public_Genomes/Elapidae/Hydrophis/Hydrophis_curtus/FromRepeatMaskerProcess"
+reference_genome_extra_dir="$HOME/ExtraSSD2/Kaas/Projects/SquamateAlignments/Reference_Genomes/Public_Genomes/$family/$genus/$species/FromRepeatMaskerProcess"
 
 # Make the above directory if it does not exist
 [ ! -d "$reference_genome_extra_dir" ] && mkdir -p "$reference_genome_extra_dir"
@@ -34,12 +49,8 @@ reference_genome_extra_dir="$HOME/ExtraSSD2/Kaas/Projects/SquamateAlignments/Ref
 species_name=$(basename "$reference_genome" | sed -E 's/\.(fasta|fna|fa)$//') # This will allow for more filename extensions in the species name
 
 # NOTE: Change this when needed
-# Species name abreviation
-species_abbreviation="hyoCur1"
-
-# NOTE: Change this when needed
 # Set the RepeatMasker directory
-repeat_masker_dir="$HOME/ExtraSSD2/Kaas/Projects/SquamateAlignments/SoftMasking/Elapidae/Hydrophis/Hydrophis_curtus/Results/2_RepeatMasker"
+repeat_masker_dir="$HOME/ExtraSSD2/Kaas/Projects/SquamateAlignments/SoftMasking/$family/$genus/$species/Results/2_RepeatMasker"
 
 # Make the logs directory if it doesn't exist
 [ ! -d "$repeat_masker_dir/Logs" ] && mkdir -p "$repeat_masker_dir/Logs"
@@ -162,7 +173,7 @@ done
 
 # NOTE: Change this when needed
 # Set the number of threads for RepeatMasker -pa to use
-t=40
+t=10
 
 # ==================== REPEAT MASKER ROUND 1 ====================
 # Round 1: SSR masking
@@ -581,6 +592,8 @@ echo -e "\e[31mCompressing outputs...\e[0m"
 gzip */*.out
 gzip */*.fasta
 gzip */*.align
+gzip */*.gff3
+gzip */*.tbl
 
 # Set an end time for the script
 end_time=$(date '+%Y-%m-%d %H:%M:%S')
@@ -594,14 +607,14 @@ echo "Total runtime: $((runtime / 3600)) hours, $(((runtime % 3600) / 60)) minut
 # Send a notification that the script has finished
 # Check if the last gzip command was successful and if key output files exist
 if [ $? -eq 0 ] && \
-   [ -f "$round6/$species_name.Full_Mask.soft.fasta.gz" ] && \
-   [ -f "$round6/$species_name.Full_Mask.out.gz" ] && \
-   [ -f "$round6/$species_name.Full_Mask.cat.gz" ] && \
-   [ -f "$round6/$species_name.Full_Mask.landscape.html" ] && \
-   [ -f "$round6/$species_name.Full_Mask.reformat.gff3" ] && \
-   [ -f "$round6/$species_name.Full_Mask.gff3" ] && \
-   [ -f "$round6/$species_name.Full_Mask.align.gz" ] && \
-   [ -f "$round6/$species_name.Full_Mask.tbl" ]; then
+	[ -f "$round6/$species_name.Full_Mask.soft.fasta.gz" ] && \
+	[ -f "$round6/$species_name.Full_Mask.out.gz" ] && \
+	[ -f "$round6/$species_name.Full_Mask.cat.gz" ] && \
+	[ -f "$round6/$species_name.Full_Mask.landscape.html" ] && \
+	[ -f "$round6/$species_name.Full_Mask.reformat.gff3.gz" ] && \
+	[ -f "$round6/$species_name.Full_Mask.gff3.gz" ] && \
+	[ -f "$round6/$species_name.Full_Mask.align.gz" ] && \
+	[ -f "$round6/$species_name.Full_Mask.tbl.gz" ]; then
 	curl -d "✅ SUCCESS: RepeatMasker completed for $species_abbreviation at $(date). Total runtime was: $((runtime / 3600)) hours, $(((runtime % 3600) / 60)) minutes, $((runtime % 60)) seconds. Results in $repeat_masker_dir/$round6/" \
 		ntfy.sh/"$ntfy_topic"
 else

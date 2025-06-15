@@ -398,6 +398,10 @@ round5_genome=$(find "$round5" -type f -name "*.19snake_unknown_mask.fasta" | he
 if check_round "$round6"; then
 	echo -e "\e[31Files found for $round6. Skipping.\e[0m"
 else
+	# Send a notifcation that the final round is starting
+	curl -d "🔔 Starting RepeatMasker round 6: Full Mask for $reference_genome at $(date). Check logs at $repeat_masker_dir/Logs/ for details." \
+		ntfy.sh/"$ntfy_topic"
+
 	echo -e "\e[31Files not found for $round6. Concatenating outputs now.\e[0m"
 
 	# Summarize/combine full output

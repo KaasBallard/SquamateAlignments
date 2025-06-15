@@ -16,13 +16,29 @@ start_time=$(date '+%Y-%m-%d %H:%M:%S')
 # Set ntfy.sh topic for notifications
 ntfy_topic="kaas-ballard-Robin-scripts-72724027625978"
 
+# SET: Change this each time you run this script
+# Set the name for the RepeatModeler database
+species_name="Hydrophis_major"
+
+# SET: Change this each time you run this script
+# Set the family name for the species
+family="Elapidae"
+
+# SET: Change this each time you run this script
+# Set the genus name for the species
+genus="Hydrophis"
+
+# SET: Change this each time you run the script
+# Set the prefix for headers in the RepeatModeler families file
+species_prefix="hydMaj1_"
+
 # NOTE: Change this each time you run the script
 # Set the RepeatModeler directory
-repeat_modeler_dir="$HOME/ExtraSSD2/Kaas/Projects/SquamateAlignments/SoftMasking/Elapidae/Hydrophis/Hydrophis_curtus/Results/0_RepeatModeler"
+repeat_modeler_dir="$HOME/ExtraSSD2/Kaas/Projects/SquamateAlignments/SoftMasking/$family/$genus/$species_name/Results/0_RepeatModeler"
 
 # NOTE: Change this each time you run the script
 # Set the repclassifier directory for output
-repclassifier_dir="$HOME/ExtraSSD2/Kaas/Projects/SquamateAlignments/SoftMasking/Elapidae/Hydrophis/Hydrophis_curtus/Results/1_Repclassifier"
+repclassifier_dir="$HOME/ExtraSSD2/Kaas/Projects/SquamateAlignments/SoftMasking/$family/$genus/$species_name/Results/1_Repclassifier"
 
 # Create log directory under the output directory if it does not exist
 [ ! -d "$repclassifier_dir/Logs" ] && mkdir -p "$repclassifier_dir/Logs"
@@ -36,7 +52,7 @@ echo "Log file created at: $log_file"
 
 # NOTE: Change this when needed
 # Set the number of threads for repclassifier
-threads=40
+threads=10
 
 # Activate the mamba environment before doing anything else
 echo "Activating mamba environment: RepeatMaskAnnot"
@@ -63,13 +79,6 @@ if [[ -z "$repeat_modeler_families" ]]; then
     echo "Error: No '*-families.fa' file found in $repeat_modeler_dir"
     exit 1
 fi
-
-# NOTE: Change this each time you run the script
-species_name="Hydrophis_curtus"
-
-# NOTE: Change this each time you run the script
-# Set the prefix for headers in the RepeatModeler families file
-species_prefix="hyoCur1_"
 
 # Send myself a notification that the script is starting
 curl -d "🔔 Starting repclassifier for $species_name at $(date). Check logs at $repclassifier_dir/Logs/ for details." \
