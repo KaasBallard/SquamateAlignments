@@ -1,6 +1,6 @@
 #!/bin/bash
 : <<'ScriptDescription'
-Date: 2025/06/12
+Date: 2025/06/14
 This script is designed to run RepeatMasker, and is based off of Sid's script and Daren's blog post.
 It performs hard masking and then soft masking.
 RepeatMasker can be found here:
@@ -24,19 +24,19 @@ family="Viperidae"
 
 # SET: Change this each time you run this script
 # Set the genus name for the species
-genus="Crotalus"
+genus="Vipera"
 
 # SET: Change this each time you run this script
 # Set the name for the species
-species="Crotalus_adamanteus"
+species="Vipera_ursinii"
 
 # SET: Change this when needed
 # Species name abreviation
-species_abbreviation="croAda1"
+species_abbreviation="vipUrs1"
 
 # SET: Change this when needed
 # Reference genome
-reference_genome="$HOME/Documents/Kaas/SquamateAlignments/Reference_Genomes/Public_Genomes/Viperidae/Crotalus/Crotalus_adamanteus/ncbi_dataset/data/GCA_039797435.1/GCA_039797435.1_Cadamanteus_3dDNAHiC_1.2_genomic.fna"
+reference_genome="$HOME/Documents/Kaas/SquamateAlignments/Reference_Genomes/Public_Genomes/Viperidae/Vipera/Vipera_ursinii/ncbi_dataset/data/GCA_947247035.1/GCA_947247035.1_rVipUrs1.1_genomic.fna"
 
 # NOTE: Change this when needed
 # Set a directory for the genomic files create by this script
