@@ -38,31 +38,51 @@ ln -s ~/Databases/Dfam39 ~/mambaforge/envs/RepeatMaskAnnot/share/RepeatMasker/Li
 
 Note that you will have to delete the original ``famdb`` that lives in the ``mamba`` environment under ``~/mambaforge/envs/RepeatMaskAnnot/share/RepeatMasker/Libraries/famdb``.
 
-# Soft-masked genomes
+# Completed Soft-masked genomes
 
 Here is a list of completed genomes:
 
 - Serpentes
   - Colubridae
     - Thamnophis
-      - Thamnophis elegans
+      - *Thamnophis elegans*
   - Elapidae
     - Bungarus
-      - Bungarus multicinctus
+      - *Bungarus multicinctus*
     - Hydrophis
-      - Hydrophis curtus
-      - Hydrophis major
+      - *Hydrophis curtus*
+      - *Hydrophis major*
     - Naja
-      - Naja naja
-      - Naja nigricollis
+      - *Naja naja*
+      - *Naja nigricollis*
   - Viperidae
     - Crotalus
-      - Crotalus adamanteus
-      - Crotalus atrox (completed in another project)
+      - *Crotalus adamanteus*
+      - *Crotalus atrox* (completed in another project)
     - Gloydius
-      - Gloydius shedaoensis
+      - *Gloydius shedaoensis*
     - Sistrurus
-      - Sistrurus catenatus
+      - *Sistrurus catenatus*
     - Vipera
-      - Vipera latastei
-      - Vipera ursinii
+      - *Vipera latastei*
+      - *Vipera ursinii*
+
+# Genomes in progress
+
+- Serpentes
+  - Colubridae
+    - Ahaetulla
+      - *Ahaetulla prasina*
+    - Arizona
+      - *Arizona elegans*
+    - Calamaria
+      - *Calamaria suluensis*
+    - Coluber
+      - *Coluber constrictor foxii*
+  - Viperidae
+    - Crotalus
+      - *Crotalus oreganus helleri*
+    - Macrovipera
+      - *Macrovipera schweizeri*
+    - Vipera
+      - *Vipera ammodytes*
