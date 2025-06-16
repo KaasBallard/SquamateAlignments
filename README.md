@@ -37,3 +37,32 @@ ln -s ~/Databases/Dfam39 ~/mambaforge/envs/RepeatMaskAnnot/share/RepeatMasker/Li
 ```
 
 Note that you will have to delete the original ``famdb`` that lives in the ``mamba`` environment under ``~/mambaforge/envs/RepeatMaskAnnot/share/RepeatMasker/Libraries/famdb``.
+
+# Soft-masked genomes
+
+Here is a list of completed genomes:
+
+- Serpentes
+  - Colubridae
+    - Thamnophis
+      - Thamnophis elegans
+    - Elapidae
+      - Bungarus
+        - Bungarus multicinctus
+      - Hydrophis
+        - Hydrophis curtus
+        - Hydrophis major
+      - Naja
+        - Naja naja
+        - Naja nigricollis
+    - Viperidae
+      - Crotalus
+        - Crotalus adamanteus
+        - Crotalus atrox (completed in another project)
+      - Gloydius
+        - Gloydius shedaoensis
+      - Sistrurus
+        - Sistrurus catenatus
+      - Vipera
+        - Vipera latastei
+        - Vipera ursinii
