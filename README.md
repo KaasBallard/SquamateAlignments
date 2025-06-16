@@ -46,23 +46,23 @@ Here is a list of completed genomes:
   - Colubridae
     - Thamnophis
       - Thamnophis elegans
-    - Elapidae
-      - Bungarus
-        - Bungarus multicinctus
-      - Hydrophis
-        - Hydrophis curtus
-        - Hydrophis major
-      - Naja
-        - Naja naja
-        - Naja nigricollis
-    - Viperidae
-      - Crotalus
-        - Crotalus adamanteus
-        - Crotalus atrox (completed in another project)
-      - Gloydius
-        - Gloydius shedaoensis
-      - Sistrurus
-        - Sistrurus catenatus
-      - Vipera
-        - Vipera latastei
-        - Vipera ursinii
+  - Elapidae
+    - Bungarus
+      - Bungarus multicinctus
+    - Hydrophis
+      - Hydrophis curtus
+      - Hydrophis major
+    - Naja
+      - Naja naja
+      - Naja nigricollis
+  - Viperidae
+    - Crotalus
+      - Crotalus adamanteus
+      - Crotalus atrox (completed in another project)
+    - Gloydius
+      - Gloydius shedaoensis
+    - Sistrurus
+      - Sistrurus catenatus
+    - Vipera
+      - Vipera latastei
+      - Vipera ursinii
