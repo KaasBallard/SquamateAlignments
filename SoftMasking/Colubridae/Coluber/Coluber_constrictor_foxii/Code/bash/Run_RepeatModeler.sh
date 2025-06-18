@@ -23,7 +23,7 @@ threads=10
 
 # SET: Change this each time you run this script
 # Set the name for the RepeatModeler database
-species_name="Coluber_contrictor_foxii"
+species_name="Coluber_constrictor_foxii"
 
 # SET: Change this each time you run this script
 # Set the family name for the species
